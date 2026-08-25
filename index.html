@@ -356,6 +356,12 @@ textarea{font-family:var(--mono); font-size:13px; line-height:1.6; resize:vertic
 .done-banner b{font-family:var(--display)}
 footer{border-top:1px solid var(--line); padding:22px 0 40px; color:var(--muted); font-size:13.5px}
 .legend{display:flex; gap:14px; flex-wrap:wrap; font-family:var(--mono); font-size:11.5px; color:var(--muted)}
+.res--new{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset}
+.res--new .res__h{background:var(--accent-soft)}
+.logmeta{font-family:var(--mono); font-size:11.5px; color:var(--muted)}
+.state{display:flex; gap:7px; flex-wrap:wrap; align-items:center; padding:9px 11px;
+  border:1px solid var(--line); border-radius:10px; background:var(--card-2)}
+.state__l{font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}
 .wire{font-family:var(--mono); font-size:12px; line-height:1.7; background:var(--sunk);
   border:1px solid var(--line); border-radius:10px; padding:10px 12px; white-space:pre-wrap;
   word-break:break-word; color:var(--ink-2); overflow-x:auto}
@@ -2097,6 +2103,21 @@ function mountLab(host, cfg, t){
   if(cfg.type==='grpc') return labGrpc(host, cfg);
   if(cfg.type==='ws')   return labWs(host, cfg);
 }
+function logPush(log, el, keep){
+  [...log.children].forEach(c=>c.classList.remove('res--new'));
+  el.classList.add('res--new');
+  log.insertBefore(el, log.firstChild);
+  const k = keep || 3;
+  while(log.children.length > k) log.removeChild(log.lastChild);
+}
+function clearBtn(logId){
+  return `<button class="btn btn--quiet btn--sm" data-clear="${logId}">очистить</button>`;
+}
+function wireClear(host){
+  const b = host.querySelector('[data-clear]');
+  if(b) b.onclick = ()=>{ const l = document.getElementById(b.dataset.clear); if(l) l.innerHTML=''; };
+}
+
 const frame = (url, inner, dt) => `
   <div class="sim">
     <div class="sim__bar">
@@ -2327,8 +2348,12 @@ function labApi(host, cfg){
         <div class="eyebrow" style="margin-bottom:5px">тело запроса · JSON</div>
         <textarea id="rbB" rows="6" spellcheck="false">${cfg.body||''}</textarea>
       </div>
+      <div class="rb__line" style="justify-content:space-between">
+        <span class="logmeta">показаны 3 последних ответа</span>${clearBtn('rbLog')}
+      </div>
       <div class="rb__log" id="rbLog"></div>
     </div>`;
+  wireClear(host);
   const $ = id => document.getElementById(id);
   const bodyless = m => m==='GET'||m==='DELETE'||m==='HEAD';
   function syncBody(){ $('rbBodyWrap').style.display = bodyless($('rbM').value)? 'none':'block'; }
@@ -2355,7 +2380,7 @@ function labApi(host, cfg){
         ${r.meta && r.meta.foreign? '<span class="chip chip--no">чужая организация</span>':''}
       </div>
       <div class="res__b">${Object.entries(hdr).map(([k,v])=>k+': '+v).join('\n')}\n\n${JSON.stringify(r.body,null,2)}</div>`;
-    const log = $('rbLog'); log.insertBefore(el, log.firstChild);
+    logPush($('rbLog'), el);
     if(cfg.server==='usersV1' && r.st===201 && r.meta && r.meta.bad)
       solveGoal('Сервер создал пользователя вне контракта — цель выполнена');
     if(cfg.server==='invoices' && r.st>=200 && r.st<300 && r.meta && r.meta.foreign)
@@ -2511,8 +2536,9 @@ function labAuth(host, cfg){
       <div class="rb__line">
         <span class="eyebrow">способ</span>
         <select id="auMode">${cfg.methods.map(m=>`<option value="${m}">${NAMES[m]}</option>`).join('')}</select>
-        <input type="text" id="auLogin" value="anna" style="max-width:110px">
-        <input type="text" id="auPass" value="hunter2" style="max-width:120px">
+        <input type="text" id="auLogin" value="anna" style="max-width:104px" spellcheck="false">
+        <input type="text" id="auPass" value="hunter2" style="max-width:112px" spellcheck="false">
+        <button class="btn btn--quiet btn--sm" id="auReset" title="вернуть anna / hunter2">сброс учётки</button>
       </div>
       <div class="rb__line" style="gap:6px">
         <button class="btn btn--sm" data-rq="login">POST /login</button>
@@ -2520,14 +2546,36 @@ function labAuth(host, cfg){
         <button class="btn btn--ghost btn--sm" data-rq="refresh">POST /api/v1/refresh</button>
         ${cfg.clock? '<button class="btn btn--quiet btn--sm" id="auClock">прошло 15 минут</button>':''}
       </div>
+      <div class="state" id="auState"></div>
       <div>
         <div class="eyebrow" style="margin-bottom:5px">что уходит на сервер</div>
         <div class="wire" id="auWire"></div>
       </div>
+      <div class="rb__line" style="justify-content:space-between">
+        <span class="logmeta">показаны 3 последних ответа</span>${clearBtn('auLog')}
+      </div>
       <div class="rb__log" id="auLog"></div>
     </div>`;
+  wireClear(host);
   const $ = id => document.getElementById(id);
   const creds = () => ({l:$('auLogin').value, p:$('auPass').value});
+  function drawState(){
+    const c = creds(), ok = c.l==='anna' && c.p==='hunter2';
+    const chips = [`<span class="state__l">состояние стенда</span>`];
+    if(!ok) chips.push(`<span class="chip chip--no">учётка не совпадает с anna / hunter2</span>`);
+    if(cfg.clock) chips.push(`<span class="chip">на часах +${minutes} мин</span>`);
+    if(mode==='session') chips.push(sess? `<span class="chip chip--ok">сессия ${sess}</span>` : `<span class="chip">сессии нет</span>`);
+    if(mode==='token'){
+      chips.push(!access? `<span class="chip">токена нет</span>`
+        : access.exp>minutes? `<span class="chip chip--ok">access живёт ещё ${access.exp-minutes} мин</span>`
+        : `<span class="chip chip--no">access истёк</span>`);
+      chips.push(refresh? `<span class="chip chip--ok">refresh есть</span>` : `<span class="chip">refresh нет</span>`);
+    }
+    if(mode==='basic') chips.push(`<span class="chip chip--warn">пароль летит в каждом запросе</span>`);
+    if(mode==='none') chips.push(`<span class="chip">заголовков авторизации нет</span>`);
+    if(mode==='apikey') chips.push(`<span class="chip">ключ системы, не человека</span>`);
+    $('auState').innerHTML = chips.join('');
+  }
 
   function headers(path, method){
     const h = {};
@@ -2554,13 +2602,13 @@ function labAuth(host, cfg){
     const c = creds(), ok = c.l==='anna' && c.p==='hunter2';
     if(kind==='login'){
       if(mode==='session'){
-        if(!ok) return {st:401, txt:'Unauthorized', body:{error:'invalid_credentials'}};
+        if(!ok) return {st:401, txt:'Unauthorized', body:{error:'invalid_credentials', hint:'на этом стенде учётка anna / hunter2'}};
         sess = 's_'+rnd(8);
         return {st:200, txt:'OK', hdr:{'set-cookie':`session=${sess}; HttpOnly; Secure; SameSite=Lax; Max-Age=1800`},
                 body:{ok:true, user:'anna'}};
       }
       if(mode==='token'){
-        if(!ok) return {st:401, txt:'Unauthorized', body:{error:'invalid_credentials'}};
+        if(!ok) return {st:401, txt:'Unauthorized', body:{error:'invalid_credentials', hint:'на этом стенде учётка anna / hunter2'}};
         access = {tok:'at_'+rnd(10), exp:minutes+15};
         refresh = {tok:'rt_'+rnd(14), exp:minutes+43200};
         return {st:200, txt:'OK', body:{token_type:'Bearer', access_token:access.tok, expires_in:900, refresh_token:refresh.tok}};
@@ -2578,7 +2626,8 @@ function labAuth(host, cfg){
     }
     if(mode==='none') return {st:401, txt:'Unauthorized', hdr:{'www-authenticate':'Basic realm="api"'}, body:{error:'unauthorized'}};
     if(mode==='basic') return ok? {st:200, txt:'OK', body:{user:'anna', auth:'basic'}}
-                               : {st:401, txt:'Unauthorized', hdr:{'www-authenticate':'Basic realm="api"'}, body:{error:'invalid_credentials'}};
+                               : {st:401, txt:'Unauthorized', hdr:{'www-authenticate':'Basic realm="api"'},
+                                  body:{error:'invalid_credentials', hint:'на этом стенде учётка anna / hunter2 — проверь поля логина и пароля'}};
     if(mode==='session') return sess? {st:200, txt:'OK', body:{user:'anna', auth:'session', session:sess}}
                                     : {st:401, txt:'Unauthorized', body:{error:'no_session', message:'нет cookie session'}};
     if(mode==='apikey') return {st:200, txt:'OK', body:{client:'batch-importer', user:null,
@@ -2600,17 +2649,20 @@ function labAuth(host, cfg){
         <span class="st ${cls}">${r.st} ${r.txt}</span>
         <span class="chip">${NAMES[mode]}</span></div>
       <div class="res__b">${Object.entries(hdr).map(([k,v])=>k+': '+v).join('\n')}\n\n${JSON.stringify(r.body,null,2)}</div>`;
-    const log = $('auLog'); log.insertBefore(el, log.firstChild);
+    logPush($('auLog'), el);
+    drawState();
     if(r.st===200 && kind==='me'){
       if(goalKind==='basic'   && mode==='basic')   solveGoal('Basic принят — цель выполнена');
       if(goalKind==='session' && mode==='session') solveGoal('Вход по сессии работает — цель выполнена');
       if(goalKind==='refresh' && sawExpired && usedRefresh) solveGoal('Доступ восстановлен через refresh — цель выполнена');
     }
   }
-  $('auMode').onchange = ()=>{ mode = $('auMode').value; drawWire('/api/v1/me','GET'); };
+  $('auMode').onchange = ()=>{ mode = $('auMode').value; drawWire('/api/v1/me','GET'); drawState(); };
+  ['auLogin','auPass'].forEach(id=> $(id).oninput = ()=>{ drawWire('/api/v1/me','GET'); drawState(); });
+  $('auReset').onclick = ()=>{ $('auLogin').value='anna'; $('auPass').value='hunter2'; drawWire('/api/v1/me','GET'); drawState(); };
   host.querySelectorAll('[data-rq]').forEach(b=> b.onclick = ()=> send(b.dataset.rq));
-  if(cfg.clock) $('auClock').onclick = ()=>{ minutes += 15; toast('Прошло 15 минут — access-токен истёк'); drawWire('/api/v1/me','GET'); };
-  drawWire('/api/v1/me','GET');
+  if(cfg.clock) $('auClock').onclick = ()=>{ minutes += 15; toast('Прошло 15 минут — access-токен истёк'); drawWire('/api/v1/me','GET'); drawState(); };
+  drawWire('/api/v1/me','GET'); drawState();
 }
 
 /* ---------- стенд: GraphQL ---------- */
@@ -2723,8 +2775,12 @@ function labGql(host, cfg){
       <textarea id="gqQ" rows="9" spellcheck="false">${cfg.query}</textarea>
       <div class="rb__line"><button class="btn btn--sm" id="gqSend">Отправить</button>
         <span class="mono" style="font-size:11.5px; color:var(--muted)">ошибки GraphQL приходят с HTTP 200 — смотри тело</span></div>
+      <div class="rb__line" style="justify-content:space-between">
+        <span class="logmeta">показаны 3 последних ответа</span>${clearBtn('gqLog')}
+      </div>
       <div class="rb__log" id="gqLog"></div>
     </div>`;
+  wireClear(host);
   const $ = id => document.getElementById(id);
   $('gqSch').onclick = ()=>{ const b=$('gqSchBox'); b.style.display = b.style.display==='block'? 'none':'block'; };
   $('gqSend').onclick = ()=>{
@@ -2739,7 +2795,7 @@ function labGql(host, cfg){
         ${r.body.data===undefined && errs? '<span class="chip chip--warn">data нет вовсе</span>':''}
         ${r.body.data && errs? '<span class="chip chip--warn">частичный ответ</span>':''}</div>
       <div class="res__b">${JSON.stringify(r.body,null,2)}</div>`;
-    const log = $('gqLog'); log.insertBefore(el, log.firstChild);
+    logPush($('gqLog'), el);
     if(cfg.auth === false){
       if(r.http===200 && errs) solveGoal('HTTP 200 с массивом errors — цель выполнена');
     } else if(r.root){
@@ -2794,8 +2850,12 @@ function labGrpc(host, cfg){
       </div>
       <div class="rb__line"><button class="btn btn--sm" id="grCall">Вызвать</button>
         <button class="btn btn--quiet btn--sm" id="grDown">сервис недоступен: выкл</button></div>
+      <div class="rb__line" style="justify-content:space-between">
+        <span class="logmeta">показаны 3 последних ответа</span>${clearBtn('grLog')}
+      </div>
       <div class="rb__log" id="grLog"></div>
     </div>`;
+  wireClear(host);
   const $ = id => document.getElementById(id);
   $('grSch').onclick = ()=>{ const b=$('grSchBox'); b.style.display = b.style.display==='block'? 'none':'block'; };
   $('grDown').onclick = ()=>{ down = !down; $('grDown').textContent = 'сервис недоступен: '+(down?'вкл':'выкл'); };
@@ -2828,7 +2888,7 @@ function labGrpc(host, cfg){
         <span class="st ${cls}">${r.c} ${GRPC_CODES[r.c]}</span>
         ${r.stream? '<span class="chip">stream · 3 сообщения</span>':''}</div>
       <div class="res__b">${r.msg? 'grpc-message: '+r.msg+'\n\n' : ''}${payload}</div>`;
-    const log = $('grLog'); log.insertBefore(el, log.firstChild);
+    logPush($('grLog'), el);
     if(seen.has(3) && seen.has(16)) solveGoal('Получены и INVALID_ARGUMENT, и UNAUTHENTICATED — цель выполнена');
   };
 }
