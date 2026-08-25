@@ -421,6 +421,8 @@ footer{border-top:1px solid var(--line); padding:22px 0 40px; color:var(--muted)
       <span>прогресс хранится только в этом браузере</span>
       <span>·</span>
       <span>все «серверы» и «девтулзы» — симуляция внутри страницы</span>
+      <span>·</span>
+      <span>сборка 25.08.2026 · v5</span>
     </div>
   </div>
 </footer>
@@ -2543,9 +2545,12 @@ function labAuth(host, cfg){
       <div class="rb__line">
         <span class="eyebrow">способ</span>
         <select id="auMode">${cfg.methods.map(m=>`<option value="${m}">${NAMES[m]}</option>`).join('')}</select>
-        <input type="text" id="auLogin" value="anna" style="max-width:104px" spellcheck="false">
-        <input type="text" id="auPass" value="hunter2" style="max-width:112px" spellcheck="false">
-        <button class="btn btn--quiet btn--sm" id="auReset" title="вернуть anna / hunter2">сброс учётки</button>
+      </div>
+      <div class="rb__line">
+        <span class="eyebrow">учётка</span>
+        <input type="text" id="auLogin" placeholder="логин" style="max-width:118px" spellcheck="false" autocomplete="off">
+        <input type="text" id="auPass" placeholder="пароль" style="max-width:126px" spellcheck="false" autocomplete="off">
+        <button class="btn btn--quiet btn--sm" id="auReset" title="подставить учётку стенда">подставить anna / hunter2</button>
       </div>
       <div class="rb__line" style="gap:6px">
         <button class="btn btn--sm" data-rq="login">POST /login</button>
@@ -2567,9 +2572,12 @@ function labAuth(host, cfg){
   const $ = id => document.getElementById(id);
   const creds = () => ({l:$('auLogin').value, p:$('auPass').value});
   function drawState(){
-    const c = creds(), ok = c.l==='anna' && c.p==='hunter2';
+    const c = creds(), ok = c.l==='anna' && c.p==='hunter2', empty = !c.l && !c.p;
+    const needs = mode==='basic' || mode==='session' || mode==='token';
     const chips = [`<span class="state__l">состояние стенда</span>`];
-    if(!ok) chips.push(`<span class="chip chip--no">учётка не совпадает с anna / hunter2</span>`);
+    if(needs && empty) chips.push(`<span class="chip">учётка не введена — она указана в условии</span>`);
+    else if(needs && !ok) chips.push(`<span class="chip chip--no">учётка не совпадает с anna / hunter2</span>`);
+    else if(needs) chips.push(`<span class="chip chip--ok">учётка верна</span>`);
     if(cfg.clock) chips.push(`<span class="chip">на часах +${minutes} мин</span>`);
     if(mode==='session') chips.push(sess? `<span class="chip chip--ok">сессия ${sess}</span>` : `<span class="chip">сессии нет</span>`);
     if(mode==='token'){
@@ -2587,7 +2595,7 @@ function labAuth(host, cfg){
   function headers(path, method){
     const h = {};
     if(method==='POST') h['content-type'] = 'application/json';
-    if(mode==='basic'){ const c=creds(); h['authorization'] = 'Basic '+btoa(c.l+':'+c.p); }
+    if(mode==='basic'){ const c=creds(); if(c.l||c.p) h['authorization'] = 'Basic '+btoa(c.l+':'+c.p); }
     if(mode==='session' && sess) h['cookie'] = 'session='+sess;
     if(mode==='token' && access && path!=='/api/v1/refresh') h['authorization'] = 'Bearer '+access.tok;
     if(mode==='token' && refresh && path==='/api/v1/refresh') h['authorization'] = 'Bearer '+refresh.tok;
@@ -2601,6 +2609,7 @@ function labAuth(host, cfg){
       const dec = atob(h['authorization'].slice(6));
       out += `\n<span class="dec">↑ base64 — это не шифрование: ${dec}</span>`;
     }
+    if(mode==='basic' && !creds().l && !creds().p) out += `\n<span class="dec">↑ логин и пароль не введены — заголовок Authorization не отправится</span>`;
     if(mode==='session' && !sess) out += `\n<span class="dec">↑ cookie пока нет — сначала POST /login</span>`;
     if(mode==='token' && !access) out += `\n<span class="dec">↑ токена пока нет — сначала POST /login</span>`;
     $('auWire').innerHTML = out;
@@ -2632,9 +2641,14 @@ function labAuth(host, cfg){
       return {st:200, txt:'OK', body:{token_type:'Bearer', access_token:access.tok, expires_in:900}};
     }
     if(mode==='none') return {st:401, txt:'Unauthorized', hdr:{'www-authenticate':'Basic realm="api"'}, body:{error:'unauthorized'}};
-    if(mode==='basic') return ok? {st:200, txt:'OK', body:{user:'anna', auth:'basic'}}
-                               : {st:401, txt:'Unauthorized', hdr:{'www-authenticate':'Basic realm="api"'},
-                                  body:{error:'invalid_credentials', hint:'на этом стенде учётка anna / hunter2 — проверь поля логина и пароля'}};
+    if(mode==='basic'){
+      const c2 = creds();
+      if(!c2.l && !c2.p) return {st:401, txt:'Unauthorized', hdr:{'www-authenticate':'Basic realm="api"'},
+        body:{error:'unauthorized', hint:'заголовка Authorization в запросе нет — введи логин и пароль из условия'}};
+      return ok? {st:200, txt:'OK', body:{user:'anna', auth:'basic'}}
+               : {st:401, txt:'Unauthorized', hdr:{'www-authenticate':'Basic realm="api"'},
+                  body:{error:'invalid_credentials', hint:'на этом стенде учётка anna / hunter2 — проверь поля логина и пароля'}};
+    }
     if(mode==='session') return sess? {st:200, txt:'OK', body:{user:'anna', auth:'session', session:sess}}
                                     : {st:401, txt:'Unauthorized', body:{error:'no_session', message:'нет cookie session'}};
     if(mode==='apikey') return {st:200, txt:'OK', body:{client:'batch-importer', user:null,
@@ -2666,7 +2680,8 @@ function labAuth(host, cfg){
   }
   $('auMode').onchange = ()=>{ mode = $('auMode').value; drawWire('/api/v1/me','GET'); drawState(); };
   ['auLogin','auPass'].forEach(id=> $(id).oninput = ()=>{ drawWire('/api/v1/me','GET'); drawState(); });
-  $('auReset').onclick = ()=>{ $('auLogin').value='anna'; $('auPass').value='hunter2'; drawWire('/api/v1/me','GET'); drawState(); };
+  $('auReset').onclick = ()=>{ $('auLogin').value='anna'; $('auPass').value='hunter2';
+    drawWire('/api/v1/me','GET'); drawState(); toast('Учётка стенда подставлена'); };
   host.querySelectorAll('[data-rq]').forEach(b=> b.onclick = ()=> send(b.dataset.rq));
   if(cfg.clock) $('auClock').onclick = ()=>{ minutes += 15; toast('Прошло 15 минут — access-токен истёк'); drawWire('/api/v1/me','GET'); drawState(); };
   drawWire('/api/v1/me','GET'); drawState();
