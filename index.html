@@ -422,7 +422,7 @@ footer{border-top:1px solid var(--line); padding:22px 0 40px; color:var(--muted)
       <span>·</span>
       <span>все «серверы» и «девтулзы» — симуляция внутри страницы</span>
       <span>·</span>
-      <span>сборка 25.08.2026 · v5</span>
+      <span>сборка 25.08.2026 · v6</span>
     </div>
   </div>
 </footer>
@@ -1538,7 +1538,8 @@ questions:[
 T({id:'a1', mod:'auth', title:'Basic: пароль в каждом запросе', tag:'стенд',
 brief:`<p>Самый простой способ аутентификации: клиент прикладывает к <strong>каждому</strong> запросу заголовок</p>
 <pre class="codeblock">Authorization: Basic &lt;base64(логин:пароль)&gt;</pre>
-<p>Учётка на стенде: <code>anna</code> / <code>hunter2</code>. Выбери способ «Basic», отправь <code>GET /api/v1/me</code> и посмотри на панель «что уходит на сервер» — там же видно расшифровку.</p>`,
+<p>Выбери способ «Basic», отправь <code>GET /api/v1/me</code> и посмотри на панель «что уходит на сервер» — там же видно расшифровку.</p>
+<div class="hintbox"><b>Данные для входа:</b> логин <code>anna</code>, пароль <code>hunter2</code> — введи их на стенде в поля «логин» и «пароль».</div>`,
 lab:{type:'auth', methods:['none','basic']},
 goal:{text:'Получить <code>200</code> на <code>GET /api/v1/me</code> через Basic', hint:'Сначала отправь запрос вообще без авторизации — посмотри на <code>401</code> и заголовок <code>WWW-Authenticate</code>. Потом переключи способ на Basic.'},
 questions:[
@@ -1565,7 +1566,8 @@ questions:[
 
 T({id:'a2', mod:'auth', title:'Cookie-сессия: состояние на сервере', tag:'стенд',
 brief:`<p>Классика веба: клиент один раз отправляет логин и пароль, сервер создаёт сессию у себя и возвращает её идентификатор в <code>Set-Cookie</code>. Дальше браузер сам прикладывает cookie к каждому запросу.</p>
-<p>Выбери способ «Cookie-сессия», нажми <code>POST /login</code>, потом <code>GET /api/v1/me</code>.</p>`,
+<p>Выбери способ «Cookie-сессия», нажми <code>POST /login</code>, потом <code>GET /api/v1/me</code>.</p>
+<div class="hintbox"><b>Данные для входа:</b> логин <code>anna</code>, пароль <code>hunter2</code> — введи их на стенде в поля «логин» и «пароль».</div>`,
 lab:{type:'auth', methods:['none','session']},
 goal:{text:'Войти через <code>POST /login</code> и получить <code>200</code> на <code>/api/v1/me</code> уже без пароля', hint:'Сначала <code>POST /login</code> — в ответе будет <code>Set-Cookie</code>. Затем <code>GET /api/v1/me</code>: пароль больше не нужен.'},
 questions:[
@@ -1592,7 +1594,8 @@ questions:[
 
 T({id:'a3', mod:'auth', title:'Bearer-токен и обмен refresh', tag:'стенд',
 brief:`<p>Способ для API и мобильных клиентов: сервер выдаёт <strong>два</strong> токена — короткоживущий <code>access</code> (минуты) и долгий <code>refresh</code> (дни). Access прикладывают к запросам, refresh обменивают на новый access, когда тот истёк.</p>
-<p>Сценарий: войди, убедись, что <code>/me</code> работает, нажми «прошло 15 минут» и восстанови доступ <strong>не вводя пароль</strong>.</p>`,
+<p>Сценарий: войди, убедись, что <code>/me</code> работает, нажми «прошло 15 минут» и восстанови доступ <strong>не вводя пароль заново</strong>.</p>
+<div class="hintbox"><b>Данные для входа:</b> логин <code>anna</code>, пароль <code>hunter2</code> — введи их на стенде в поля «логин» и «пароль».</div>`,
 lab:{type:'auth', methods:['none','token'], clock:true},
 goal:{text:'После истечения access получить <code>200</code> на <code>/api/v1/me</code>, обменяв refresh', hint:'<code>POST /login</code> → <code>GET /api/v1/me</code> (200) → «прошло 15 минут» → <code>GET /api/v1/me</code> (401 token_expired) → <code>POST /api/v1/refresh</code> → снова <code>GET /api/v1/me</code>.'},
 questions:[
@@ -2550,7 +2553,6 @@ function labAuth(host, cfg){
         <span class="eyebrow">учётка</span>
         <input type="text" id="auLogin" placeholder="логин" style="max-width:118px" spellcheck="false" autocomplete="off">
         <input type="text" id="auPass" placeholder="пароль" style="max-width:126px" spellcheck="false" autocomplete="off">
-        <button class="btn btn--quiet btn--sm" id="auReset" title="подставить учётку стенда">подставить anna / hunter2</button>
       </div>
       <div class="rb__line" style="gap:6px">
         <button class="btn btn--sm" data-rq="login">POST /login</button>
@@ -2680,8 +2682,6 @@ function labAuth(host, cfg){
   }
   $('auMode').onchange = ()=>{ mode = $('auMode').value; drawWire('/api/v1/me','GET'); drawState(); };
   ['auLogin','auPass'].forEach(id=> $(id).oninput = ()=>{ drawWire('/api/v1/me','GET'); drawState(); });
-  $('auReset').onclick = ()=>{ $('auLogin').value='anna'; $('auPass').value='hunter2';
-    drawWire('/api/v1/me','GET'); drawState(); toast('Учётка стенда подставлена'); };
   host.querySelectorAll('[data-rq]').forEach(b=> b.onclick = ()=> send(b.dataset.rq));
   if(cfg.clock) $('auClock').onclick = ()=>{ minutes += 15; toast('Прошло 15 минут — access-токен истёк'); drawWire('/api/v1/me','GET'); drawState(); };
   drawWire('/api/v1/me','GET'); drawState();
