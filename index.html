@@ -357,6 +357,11 @@ textarea{font-family:var(--mono); font-size:13px; line-height:1.6; resize:vertic
 footer{border-top:1px solid var(--line); padding:22px 0 40px; color:var(--muted); font-size:13.5px}
 .legend{display:flex; gap:14px; flex-wrap:wrap; font-family:var(--mono); font-size:11.5px; color:var(--muted)}
 .res--new{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset}
+.res__h{cursor:pointer}
+.res--fold .res__b{display:none}
+.res--fold{opacity:.72}
+.res--fold .res__h::after{content:'развернуть'; margin-left:auto; color:var(--muted); font-size:10.5px;
+  letter-spacing:.08em; text-transform:uppercase}
 .res--new .res__h{background:var(--accent-soft)}
 .logmeta{font-family:var(--mono); font-size:11.5px; color:var(--muted)}
 .state{display:flex; gap:7px; flex-wrap:wrap; align-items:center; padding:9px 11px;
@@ -2104,10 +2109,12 @@ function mountLab(host, cfg, t){
   if(cfg.type==='ws')   return labWs(host, cfg);
 }
 function logPush(log, el, keep){
-  [...log.children].forEach(c=>c.classList.remove('res--new'));
+  [...log.children].forEach(c=>{ c.classList.remove('res--new'); c.classList.add('res--fold'); });
   el.classList.add('res--new');
+  const h = el.querySelector('.res__h');
+  if(h) h.onclick = ()=> el.classList.toggle('res--fold');
   log.insertBefore(el, log.firstChild);
-  const k = keep || 3;
+  const k = keep || 4;
   while(log.children.length > k) log.removeChild(log.lastChild);
 }
 function clearBtn(logId){
@@ -2349,7 +2356,7 @@ function labApi(host, cfg){
         <textarea id="rbB" rows="6" spellcheck="false">${cfg.body||''}</textarea>
       </div>
       <div class="rb__line" style="justify-content:space-between">
-        <span class="logmeta">показаны 3 последних ответа</span>${clearBtn('rbLog')}
+        <span class="logmeta">предыдущие ответы свёрнуты — клик по строке разворачивает</span>${clearBtn('rbLog')}
       </div>
       <div class="rb__log" id="rbLog"></div>
     </div>`;
@@ -2552,7 +2559,7 @@ function labAuth(host, cfg){
         <div class="wire" id="auWire"></div>
       </div>
       <div class="rb__line" style="justify-content:space-between">
-        <span class="logmeta">показаны 3 последних ответа</span>${clearBtn('auLog')}
+        <span class="logmeta">предыдущие ответы свёрнуты — клик по строке разворачивает</span>${clearBtn('auLog')}
       </div>
       <div class="rb__log" id="auLog"></div>
     </div>`;
@@ -2776,7 +2783,7 @@ function labGql(host, cfg){
       <div class="rb__line"><button class="btn btn--sm" id="gqSend">Отправить</button>
         <span class="mono" style="font-size:11.5px; color:var(--muted)">ошибки GraphQL приходят с HTTP 200 — смотри тело</span></div>
       <div class="rb__line" style="justify-content:space-between">
-        <span class="logmeta">показаны 3 последних ответа</span>${clearBtn('gqLog')}
+        <span class="logmeta">предыдущие ответы свёрнуты — клик по строке разворачивает</span>${clearBtn('gqLog')}
       </div>
       <div class="rb__log" id="gqLog"></div>
     </div>`;
@@ -2851,7 +2858,7 @@ function labGrpc(host, cfg){
       <div class="rb__line"><button class="btn btn--sm" id="grCall">Вызвать</button>
         <button class="btn btn--quiet btn--sm" id="grDown">сервис недоступен: выкл</button></div>
       <div class="rb__line" style="justify-content:space-between">
-        <span class="logmeta">показаны 3 последних ответа</span>${clearBtn('grLog')}
+        <span class="logmeta">предыдущие ответы свёрнуты — клик по строке разворачивает</span>${clearBtn('grLog')}
       </div>
       <div class="rb__log" id="grLog"></div>
     </div>`;
@@ -2913,6 +2920,7 @@ function labWs(host, cfg){
         <button class="btn btn--ghost btn--sm" id="wsPing">ping</button>
         <button class="btn btn--quiet btn--sm" id="wsDrop">Обрыв сети</button>
         <button class="btn btn--quiet btn--sm" id="wsClose">Закрыть (1000)</button>
+        <button class="btn btn--quiet btn--sm" data-clear="wsLog">очистить</button>
       </div>
       <div class="rb__line">
         <input type="text" id="wsIn" placeholder='{"type":"subscribe","pair":"USD/RUB"}' spellcheck="false">
@@ -2920,13 +2928,16 @@ function labWs(host, cfg){
       </div>
       <div class="msgs" id="wsLog"></div>
     </div>`;
+  wireClear(host);
   const $ = id => document.getElementById(id);
   const now = () => new Date().toLocaleTimeString('ru-RU');
   function push(kind, text){
     const el = document.createElement('div');
     el.className = 'msg msg--'+kind;
     el.innerHTML = `<span class="msg__t">${now()}</span>${text}`;
-    const log = $('wsLog'); log.appendChild(el); log.scrollTop = log.scrollHeight;
+    const log = $('wsLog'); log.appendChild(el);
+    while(log.children.length > 60) log.removeChild(log.firstChild);
+    log.scrollTop = log.scrollHeight;
   }
   function setSt(v, cls){ const c=$('wsSt'); c.textContent=v; c.className='chip '+(cls||''); }
   function stop(){ if(timer){ clearInterval(timer); timer=null; } }
