@@ -1,0 +1,2233 @@
+<title>Багодром</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root{
+  --paper:#E9EDF3; --card:#FFFFFF; --card-2:#F4F6FA; --sunk:#DFE5EE;
+  --ink:#0F1524; --ink-2:#3D485C; --muted:#6A7689; --line:#D2DAE6; --line-2:#BFC9D8;
+  --accent:#1F4FD8; --accent-soft:#E4EAFB; --accent-ink:#173CA6; --on-accent:#FFFFFF;
+  --amber:#9C5B00; --amber-soft:#FBEEDA;
+  --pass:#0F6E44; --pass-soft:#DDF1E6;
+  --fail:#B32718; --fail-soft:#FBE3DF;
+  --shadow:0 1px 2px rgba(15,21,36,.06),0 8px 24px -12px rgba(15,21,36,.18);
+  --shadow-lift:0 2px 4px rgba(15,21,36,.07),0 18px 40px -18px rgba(15,21,36,.28);
+  --r:14px; --r-s:9px;
+  --display:"Unbounded","Golos Text",system-ui,sans-serif;
+  --body:"Golos Text","Helvetica Neue",Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0A0E15; --card:#141A25; --card-2:#1A212E; --sunk:#0F141D;
+    --ink:#E7EBF3; --ink-2:#C0C8D6; --muted:#8B96A9; --line:#242E3E; --line-2:#334054;
+    --accent:#5C87FF; --accent-soft:#18233D; --accent-ink:#A8C0FF; --on-accent:#08111F;
+    --amber:#E4A64B; --amber-soft:#33260F;
+    --pass:#48D08C; --pass-soft:#0F2B1F;
+    --fail:#FF8474; --fail-soft:#331714;
+    --shadow:0 1px 2px rgba(0,0,0,.5),0 10px 28px -14px rgba(0,0,0,.7);
+    --shadow-lift:0 2px 6px rgba(0,0,0,.55),0 22px 46px -20px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0A0E15; --card:#141A25; --card-2:#1A212E; --sunk:#0F141D;
+  --ink:#E7EBF3; --ink-2:#C0C8D6; --muted:#8B96A9; --line:#242E3E; --line-2:#334054;
+  --accent:#5C87FF; --accent-soft:#18233D; --accent-ink:#A8C0FF; --on-accent:#08111F;
+  --amber:#E4A64B; --amber-soft:#33260F;
+  --pass:#48D08C; --pass-soft:#0F2B1F;
+  --fail:#FF8474; --fail-soft:#331714;
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 10px 28px -14px rgba(0,0,0,.7);
+  --shadow-lift:0 2px 6px rgba(0,0,0,.55),0 22px 46px -20px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--body); font-size:16px; line-height:1.55;
+  -webkit-text-size-adjust:100%;
+}
+h1,h2,h3,h4{font-family:var(--display); font-weight:700; line-height:1.14; text-wrap:balance; margin:0}
+p{margin:0}
+a{color:var(--accent)}
+button{font-family:inherit; font-size:inherit; color:inherit}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px}
+.mono{font-family:var(--mono)}
+.eyebrow{
+  font-family:var(--mono); font-size:11px; font-weight:500; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--muted);
+}
+.wrap{max-width:1080px; margin:0 auto; padding:0 18px}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky; top:0; z-index:40; background:color-mix(in srgb,var(--paper) 88%,transparent);
+  backdrop-filter:blur(10px); border-bottom:1px solid var(--line);
+}
+.topbar__in{display:flex; align-items:center; gap:14px; height:58px}
+.brand{display:flex; align-items:center; gap:9px; background:none; border:0; padding:0; cursor:pointer}
+.brand__mark{
+  width:26px; height:26px; border-radius:7px; background:var(--ink); color:var(--paper);
+  display:grid; place-items:center; font-family:var(--mono); font-size:13px; font-weight:700;
+  flex:none;
+}
+.brand__name{font-family:var(--display); font-weight:700; font-size:15px; letter-spacing:.02em}
+.topbar__spacer{flex:1}
+.xp{display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:12px; color:var(--muted)}
+.xp b{color:var(--ink); font-weight:700}
+.bar{width:96px; height:6px; border-radius:99px; background:var(--sunk); overflow:hidden}
+.bar>i{display:block; height:100%; background:var(--accent); border-radius:99px; transition:width .45s ease}
+.tbtn{
+  border:1px solid var(--line); background:var(--card); border-radius:8px; height:32px; padding:0 10px;
+  cursor:pointer; font-family:var(--mono); font-size:12px; color:var(--ink-2);
+}
+.tbtn:hover{border-color:var(--line-2)}
+
+/* ---------- hero ---------- */
+.hero{padding:34px 0 26px; border-bottom:1px solid var(--line)}
+.hero__grid{display:grid; grid-template-columns:1.35fr .65fr; gap:34px; align-items:end}
+.hero h1{font-size:clamp(28px,6vw,44px); letter-spacing:-.02em}
+.hero h1 em{font-style:normal; color:var(--accent)}
+.hero__lede{margin-top:12px; color:var(--ink-2); max-width:56ch}
+.hero__stats{display:flex; gap:22px; flex-wrap:wrap}
+.stat b{display:block; font-family:var(--mono); font-size:24px; font-weight:700; letter-spacing:-.02em}
+.stat span{font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  border-radius:10px; border:1px solid transparent; padding:11px 18px;
+  font-weight:600; cursor:pointer; background:var(--accent); color:var(--on-accent);
+  transition:transform .12s ease, filter .12s ease; text-decoration:none;
+}
+.btn:hover{filter:brightness(1.06)}
+.btn:active{transform:translateY(1px)}
+.btn--ghost{background:var(--card); color:var(--ink); border-color:var(--line-2)}
+.btn--quiet{background:transparent; color:var(--ink-2); border-color:var(--line)}
+.btn[disabled]{opacity:.45; cursor:not-allowed}
+.btn--sm{padding:7px 12px; font-size:14px; border-radius:8px}
+
+/* ---------- module grid ---------- */
+.section{padding:30px 0 46px}
+.section__head{display:flex; align-items:baseline; gap:12px; margin-bottom:16px; flex-wrap:wrap}
+.section__head h2{font-size:19px}
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:14px}
+.mod{
+  text-align:left; background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+  padding:16px 16px 14px; cursor:pointer; box-shadow:var(--shadow); position:relative;
+  display:flex; flex-direction:column; gap:9px; transition:box-shadow .18s ease, transform .18s ease, border-color .18s ease;
+}
+.mod:hover{box-shadow:var(--shadow-lift); transform:translateY(-2px); border-color:var(--line-2)}
+.mod__top{display:flex; align-items:center; gap:10px}
+.mod__idx{
+  font-family:var(--mono); font-size:12px; font-weight:700; color:var(--accent);
+  background:var(--accent-soft); border-radius:6px; padding:3px 7px; flex:none;
+}
+.mod h3{font-size:16.5px; font-family:var(--body); font-weight:700; letter-spacing:-.01em}
+.mod p{color:var(--muted); font-size:14px}
+.mod__foot{display:flex; align-items:center; gap:10px; margin-top:4px}
+.mod__foot .bar{flex:1; width:auto}
+.mod__count{font-family:var(--mono); font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums}
+.mod--done{border-color:color-mix(in srgb,var(--pass) 45%,var(--line))}
+.mod--done .mod__idx{color:var(--pass); background:var(--pass-soft)}
+.mod--done .bar>i{background:var(--pass)}
+
+/* ---------- task list ---------- */
+.crumbs{display:flex; align-items:center; gap:8px; padding:20px 0 6px; flex-wrap:wrap}
+.crumbs button{background:none; border:0; padding:0; cursor:pointer; color:var(--muted); font-family:var(--mono); font-size:12px}
+.crumbs button:hover{color:var(--accent)}
+.crumbs span{color:var(--line-2); font-family:var(--mono); font-size:12px}
+.tasklist{display:flex; flex-direction:column; gap:9px; margin-top:18px}
+.trow{
+  display:flex; align-items:center; gap:13px; text-align:left; width:100%;
+  background:var(--card); border:1px solid var(--line); border-radius:11px; padding:13px 14px;
+  cursor:pointer; box-shadow:var(--shadow); transition:border-color .15s ease, transform .15s ease;
+}
+.trow:hover{border-color:var(--accent); transform:translateX(2px)}
+.trow__st{
+  width:26px; height:26px; border-radius:50%; flex:none; display:grid; place-items:center;
+  border:1.5px solid var(--line-2); font-family:var(--mono); font-size:12px; font-weight:700; color:var(--muted);
+}
+.trow--ok .trow__st{background:var(--pass-soft); border-color:var(--pass); color:var(--pass)}
+.trow--part .trow__st{background:var(--amber-soft); border-color:var(--amber); color:var(--amber)}
+.trow__body{flex:1; min-width:0}
+.trow__title{font-weight:600; font-size:15.5px}
+.trow__meta{font-family:var(--mono); font-size:11.5px; color:var(--muted); margin-top:2px}
+.trow__arrow{color:var(--line-2); font-family:var(--mono)}
+
+/* ---------- task view ---------- */
+.task{padding:8px 0 120px}
+.task__head{margin-bottom:16px}
+.task__head h2{font-size:clamp(21px,4.4vw,28px); letter-spacing:-.02em; margin-top:6px}
+.card{background:var(--card); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:18px}
+.card+.card{margin-top:14px}
+.card__label{display:flex; align-items:center; gap:8px; margin-bottom:11px}
+.card__label b{font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:500}
+.card__label hr{flex:1; border:0; border-top:1px solid var(--line); margin:0}
+.prose{color:var(--ink-2); font-size:15.5px}
+.prose p+p{margin-top:10px}
+.prose ul,.prose ol{margin:10px 0 0; padding-left:22px}
+.prose li{margin-bottom:5px}
+.prose strong{color:var(--ink)}
+.prose code{
+  font-family:var(--mono); font-size:.88em; background:var(--card-2); border:1px solid var(--line);
+  border-radius:5px; padding:1px 5px; color:var(--ink);
+}
+.hintbox{
+  margin-top:12px; border-left:3px solid var(--amber); background:var(--amber-soft);
+  border-radius:0 8px 8px 0; padding:10px 13px; font-size:14.5px; color:var(--ink-2);
+}
+.hintbox b{color:var(--ink)}
+.codeblock{
+  font-family:var(--mono); font-size:12.5px; line-height:1.65; background:var(--sunk);
+  border:1px solid var(--line); border-radius:10px; padding:12px 13px; overflow-x:auto;
+  white-space:pre; color:var(--ink-2); margin-top:11px;
+}
+
+/* ---------- questions ---------- */
+.q+.q{margin-top:12px}
+.q__title{font-weight:600; font-size:15.5px; margin-bottom:3px}
+.q__kind{font-family:var(--mono); font-size:11px; color:var(--muted); margin-bottom:10px}
+.opts{display:flex; flex-direction:column; gap:8px}
+.opt{
+  display:flex; gap:11px; align-items:flex-start; padding:11px 13px; border-radius:10px;
+  border:1px solid var(--line); background:var(--card-2); cursor:pointer; font-size:15px;
+  transition:border-color .14s ease, background .14s ease;
+}
+.opt:hover{border-color:var(--line-2)}
+.opt input{margin:3px 0 0; accent-color:var(--accent); width:17px; height:17px; flex:none}
+.opt__txt{flex:1}
+.opt--sel{border-color:var(--accent); background:var(--accent-soft)}
+.opt--right{border-color:var(--pass); background:var(--pass-soft)}
+.opt--wrong{border-color:var(--fail); background:var(--fail-soft)}
+.opt--miss{border-color:var(--pass); border-style:dashed; background:transparent}
+.opt__tag{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; align-self:center; flex:none}
+.opt--right .opt__tag{color:var(--pass)}
+.opt--wrong .opt__tag{color:var(--fail)}
+.opt--miss .opt__tag{color:var(--pass)}
+.expl{
+  margin-top:10px; font-size:14.5px; color:var(--ink-2); border-left:3px solid var(--accent);
+  background:var(--accent-soft); border-radius:0 8px 8px 0; padding:10px 13px;
+}
+.expl b{color:var(--ink)}
+.match{display:flex; flex-direction:column; gap:8px}
+.match__row{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.match__key{
+  font-family:var(--mono); font-weight:700; font-size:13px; background:var(--sunk);
+  border:1px solid var(--line); border-radius:7px; padding:6px 9px; min-width:62px; text-align:center;
+}
+select,input[type=text],textarea{
+  font-family:var(--body); font-size:15px; color:var(--ink); background:var(--card-2);
+  border:1px solid var(--line-2); border-radius:8px; padding:8px 10px; width:100%;
+}
+textarea{font-family:var(--mono); font-size:13px; line-height:1.6; resize:vertical}
+.match__row select{flex:1; min-width:180px}
+.match__row.is-right select{border-color:var(--pass); background:var(--pass-soft)}
+.match__row.is-wrong select{border-color:var(--fail); background:var(--fail-soft)}
+
+/* ---------- action bar ---------- */
+.actions{
+  position:sticky; bottom:0; z-index:30; margin-top:18px;
+  background:color-mix(in srgb,var(--paper) 92%,transparent); backdrop-filter:blur(8px);
+  border-top:1px solid var(--line); padding:12px 0 14px;
+}
+.actions__in{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+.verdict{font-family:var(--mono); font-size:13px; font-weight:500}
+.verdict--ok{color:var(--pass)}
+.verdict--no{color:var(--fail)}
+.actions__spacer{flex:1}
+
+/* ---------- sim: browser chrome ---------- */
+.sim{border:1px solid var(--line-2); border-radius:12px; overflow:hidden; background:var(--card); margin-top:11px}
+.sim__bar{
+  display:flex; align-items:center; gap:8px; padding:8px 10px; background:var(--card-2);
+  border-bottom:1px solid var(--line); font-family:var(--mono); font-size:12px; color:var(--muted);
+}
+.sim__dots{display:flex; gap:5px; flex:none}
+.sim__dots i{width:9px; height:9px; border-radius:50%; background:var(--line-2)}
+.sim__url{
+  flex:1; background:var(--sunk); border:1px solid var(--line); border-radius:6px; padding:3px 8px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink-2);
+}
+.sim__body{padding:16px}
+
+/* app mock */
+.app{display:flex; flex-direction:column; gap:12px}
+.app__top{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap}
+.app__who{font-family:var(--mono); font-size:12.5px; color:var(--muted)}
+.app__who b{color:var(--ink)}
+.field{display:flex; flex-direction:column; gap:5px; margin-bottom:11px}
+.field>label{font-size:13.5px; font-weight:600; color:var(--ink-2)}
+.field .req{color:var(--fail)}
+.field__err{font-size:12.5px; color:var(--fail); font-family:var(--mono); min-height:1px}
+.field__ok{font-size:12.5px; color:var(--pass); font-family:var(--mono)}
+.formgrid{display:grid; grid-template-columns:1fr 1fr; gap:0 14px}
+.balance{
+  font-family:var(--mono); font-size:26px; font-weight:700; letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;
+}
+.kv{display:grid; grid-template-columns:auto 1fr; gap:4px 14px; font-family:var(--mono); font-size:12.5px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0; color:var(--ink)}
+.chip{
+  display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px;
+  font-weight:500; letter-spacing:.06em; text-transform:uppercase; border-radius:99px;
+  padding:3px 9px; border:1px solid var(--line-2); color:var(--muted); background:var(--card-2);
+}
+.chip--ok{color:var(--pass); border-color:var(--pass); background:var(--pass-soft)}
+.chip--no{color:var(--fail); border-color:var(--fail); background:var(--fail-soft)}
+.chip--warn{color:var(--amber); border-color:var(--amber); background:var(--amber-soft)}
+
+/* devtools */
+.dt{border-top:2px solid var(--line-2); background:var(--sunk)}
+.dt__tabs{display:flex; gap:2px; padding:0 6px; border-bottom:1px solid var(--line); overflow-x:auto; background:var(--card-2)}
+.dt__tab{
+  border:0; background:none; padding:9px 12px; font-family:var(--mono); font-size:12px; color:var(--muted);
+  cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;
+}
+.dt__tab[aria-selected=true]{color:var(--ink); border-bottom-color:var(--accent); background:var(--card)}
+.dt__pane{padding:0; max-height:none}
+.nettable{width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12px}
+.nettable th{
+  text-align:left; font-weight:500; color:var(--muted); padding:7px 9px; border-bottom:1px solid var(--line);
+  font-size:11px; letter-spacing:.06em; text-transform:uppercase; white-space:nowrap;
+}
+.nettable td{padding:7px 9px; border-bottom:1px solid var(--line); white-space:nowrap}
+.nettable tbody tr{cursor:pointer}
+.nettable tbody tr:hover{background:var(--card-2)}
+.nettable tbody tr.is-sel{background:var(--accent-soft)}
+.nettable .u{max-width:230px; overflow:hidden; text-overflow:ellipsis; color:var(--ink)}
+.st{font-weight:700}
+.st--2{color:var(--pass)} .st--3{color:var(--amber)} .st--4{color:var(--fail)} .st--5{color:var(--fail)}
+.st--0{color:var(--muted)}
+.wf{width:100%; min-width:70px; height:8px; background:var(--sunk); border-radius:3px; position:relative}
+.wf>i{position:absolute; top:0; height:100%; background:var(--accent); border-radius:3px; opacity:.75}
+.tblscroll{overflow-x:auto}
+.detail{border-top:1px solid var(--line-2); background:var(--card)}
+.detail__tabs{display:flex; gap:2px; padding:0 6px; border-bottom:1px solid var(--line); overflow-x:auto}
+.detail__body{padding:11px 12px; font-family:var(--mono); font-size:12px; white-space:pre-wrap; word-break:break-word; color:var(--ink-2); max-height:260px; overflow:auto}
+.console{font-family:var(--mono); font-size:12px; padding:2px 0}
+.console__l{padding:7px 11px; border-bottom:1px solid var(--line); white-space:pre-wrap; word-break:break-word}
+.console__l--err{color:var(--fail); background:var(--fail-soft)}
+.console__l--warn{color:var(--amber); background:var(--amber-soft)}
+.console__l--log{color:var(--ink-2)}
+.console__src{float:right; color:var(--muted); font-size:11px; margin-left:10px}
+.storagegrid{padding:10px 12px; display:flex; flex-direction:column; gap:12px}
+.sgroup__h{font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:6px}
+.sgroup table{width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12px}
+.sgroup td{border:1px solid var(--line); padding:6px 8px; word-break:break-all; vertical-align:top}
+.sgroup td:first-child{color:var(--accent); white-space:nowrap; width:1%}
+
+/* request builder */
+.rb{display:flex; flex-direction:column; gap:10px}
+.rb__line{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.rb__line select{width:auto; min-width:104px; font-family:var(--mono); font-weight:700; font-size:13px}
+.rb__line input{flex:1; min-width:200px; font-family:var(--mono); font-size:13px}
+.rb__log{display:flex; flex-direction:column; gap:8px}
+.res{border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--card-2)}
+.res__h{display:flex; align-items:center; gap:10px; padding:8px 11px; border-bottom:1px solid var(--line); font-family:var(--mono); font-size:12px; flex-wrap:wrap}
+.res__h .m{font-weight:700; color:var(--ink)}
+.res__h .p{color:var(--ink-2); word-break:break-all}
+.res__b{padding:10px 11px; font-family:var(--mono); font-size:12px; white-space:pre-wrap; word-break:break-word; color:var(--ink-2); max-height:230px; overflow:auto}
+.goal{
+  display:flex; align-items:flex-start; gap:10px; padding:11px 13px; border-radius:10px;
+  border:1px dashed var(--line-2); background:var(--card-2); margin-top:11px; font-size:14.5px;
+}
+.goal--done{border-style:solid; border-color:var(--pass); background:var(--pass-soft); color:var(--ink)}
+.goal__ic{font-family:var(--mono); font-weight:700; color:var(--muted); flex:none}
+.goal--done .goal__ic{color:var(--pass)}
+.goal b{display:block; font-size:12px; font-family:var(--mono); letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:2px}
+.goal--done b{color:var(--pass)}
+
+/* toast */
+.toast{
+  position:fixed; left:50%; transform:translateX(-50%); bottom:78px; z-index:90;
+  background:var(--ink); color:var(--paper); padding:10px 16px; border-radius:99px;
+  font-family:var(--mono); font-size:13px; box-shadow:var(--shadow-lift); opacity:0; pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease; max-width:90vw; text-align:center;
+}
+.toast.is-on{opacity:1; transform:translateX(-50%) translateY(-6px)}
+
+/* misc */
+.split{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+.center{text-align:center}
+.done-banner{
+  border:1px solid var(--pass); background:var(--pass-soft); border-radius:var(--r); padding:16px 18px;
+  display:flex; gap:14px; align-items:center; margin-top:14px;
+}
+.done-banner b{font-family:var(--display)}
+footer{border-top:1px solid var(--line); padding:22px 0 40px; color:var(--muted); font-size:13.5px}
+.legend{display:flex; gap:14px; flex-wrap:wrap; font-family:var(--mono); font-size:11.5px; color:var(--muted)}
+@media (max-width:760px){
+  .hero__grid{grid-template-columns:1fr; gap:20px; align-items:start}
+  .split{grid-template-columns:1fr}
+  .formgrid{grid-template-columns:1fr}
+  .grid{grid-template-columns:1fr}
+  .card{padding:15px}
+  .wrap{padding:0 14px}
+  .brand__name{font-size:14px}
+  .bar{width:68px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important; animation:none!important}
+}
+</style>
+
+<div class="topbar">
+  <div class="wrap topbar__in">
+    <button class="brand" id="brandBtn" aria-label="На главную">
+      <span class="brand__mark">Б</span>
+      <span class="brand__name">БАГОДРОМ</span>
+    </button>
+    <span class="topbar__spacer"></span>
+    <div class="xp" id="xpBox">
+      <span class="bar"><i id="xpBar" style="width:0%"></i></span>
+      <span><b id="xpDone">0</b>/<span id="xpAll">0</span></span>
+    </div>
+    <button class="tbtn" id="resetBtn" title="Сбросить прогресс">сброс</button>
+  </div>
+</div>
+
+<main id="app"></main>
+
+<footer>
+  <div class="wrap">
+    <div class="legend">
+      <span>прогресс хранится только в этом браузере</span>
+      <span>·</span>
+      <span>все «серверы» и «девтулзы» — симуляция внутри страницы</span>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+
+/* ============================== МОДУЛИ ============================== */
+const MODULES = [
+  {id:'front', n:'01', title:'Валидация на фронте',      blurb:'Кривая форма регистрации: найти, что она пропускает мимо ТЗ.'},
+  {id:'back',  n:'02', title:'Валидация на бэкенде',     blurb:'Обойти фронт и постучаться в API напрямую. Кто на самом деле сторож данных.'},
+  {id:'http',  n:'03', title:'HTTP-коды и REST',         blurb:'2xx/4xx/5xx, идемпотентность, PUT против PATCH, что возвращать на что.'},
+  {id:'msg',   n:'04', title:'Текст ошибки и подсказки', blurb:'Что писать пользователю, что нельзя показывать никогда.'},
+  {id:'dt',    n:'05', title:'DevTools',                 blurb:'Network, Console, Application: читать запросы, куки и падения.'},
+  {id:'loc',   n:'06', title:'Локализация багов',        blurb:'Фронт, бэк, данные или окружение — сузить до слоя за 3 шага.'},
+  {id:'td',    n:'07', title:'Тест-дизайн',              blurb:'Классы эквивалентности, границы, набор кейсов без дыр.'},
+  {id:'sec',   n:'08', title:'Защита данных',            blurb:'От авторизации до аудита: подменить cookie, подкрутить JWT, влезть в чужой счёт.'}
+];
+
+/* ============================== ЗАДАЧИ ============================== */
+const TASKS = [];
+const T = (t) => { TASKS.push(t); return t; };
+
+/* ---------- 01. Валидация на фронте ---------- */
+T({id:'f1', mod:'front', title:'Форма регистрации, которая пропускает всё', tag:'стенд',
+brief:`<p>Перед тобой форма регистрации на тестовом стенде. Разработчик клянётся, что валидация «сделана».</p>
+<p><strong>ТЗ на форму:</strong></p>
+<ul>
+<li><code>Имя</code> — обязательное, 2–64 символа, не может состоять только из пробелов</li>
+<li><code>Email</code> — обязательное, валидный адрес: есть <code>@</code>, домен и доменная зона (<code>.ru</code>, <code>.com</code>…)</li>
+<li><code>Телефон</code> — необязательное; если заполнено — только цифры, <code>+</code>, пробелы и дефисы, 11–15 цифр</li>
+<li><code>Возраст</code> — обязательное, целое число от 18 до 120</li>
+<li><code>Пароль</code> — обязательное, минимум 8 символов</li>
+<li><code>Повтор пароля</code> — должен совпадать с паролем</li>
+<li><code>Согласие с условиями</code> — обязательный чекбокс</li>
+</ul>
+<p>Пробуй ломать поля по одному: подставляй значения, которые ТЗ запрещает, и жми «Создать аккаунт».</p>`,
+lab:{type:'form'},
+goal:{text:'Добиться сообщения «Аккаунт создан» на данных, которые ТЗ запрещает', hint:'Начни с email: попробуй <code>ivan@mail</code> — без доменной зоны.'},
+questions:[
+ {k:'multi', q:'Отметь все реальные дефекты валидации этой формы (по ТЗ выше)',
+  opts:[
+   'Email <code>ivan@mail</code> без доменной зоны принимается как валидный',
+   'Имя из одних пробелов <code>"   "</code> проходит проверку «обязательное поле»',
+   'Телефон принимает буквы: <code>ноль-девять-два</code> уходит на сервер',
+   'Повтор пароля не сравнивается с паролем — можно ввести разные',
+   'Возраст <code>150</code> и <code>-3</code> принимаются, границы 18–120 не работают',
+   'Пароль из 6 символов принимается, хотя в ТЗ минимум 8',
+   'Ошибки показываются только после нажатия кнопки, а не во время ввода',
+   'Телефон не помечен звёздочкой как обязательный',
+   'Кнопка «Создать аккаунт» активна, пока форма ещё не заполнена'
+  ],
+  right:[0,1,2,3,4,5],
+  expl:`Первые шесть — расхождение с ТЗ, каждый оформляется отдельным баг-репортом. Последние три — не дефекты: <b>момент показа ошибки</b> (on submit vs on blur) в ТЗ не задан, это вопрос к UX, а не баг; <b>телефон и не должен быть обязательным</b>; <b>активная кнопка</b> — распространённый и часто желаемый паттерн (пользователю нужно узнать, что именно не так, а не тыкать в мёртвую кнопку).`}
+]});
+
+T({id:'f2', mod:'front', title:'Зачем валидация на фронте, если есть бэкенд', tag:'теория',
+brief:`<p>На ревью тест-кейсов разработчик говорит: «Проверки на клиенте — косметика, реальную валидацию всё равно делает сервер, не тестируй фронт вообще».</p>`,
+questions:[
+ {k:'multi', q:'Что фронтовая валидация даёт на самом деле? Отметь верные утверждения',
+  opts:[
+   'Быстрая обратная связь: пользователь узнаёт об ошибке до отправки формы',
+   'Меньше лишних запросов и нагрузки на сервер',
+   'Защита данных от злоумышленника',
+   'Подсказка формата (маска телефона, счётчик символов) — часть UX',
+   'Можно не проверять те же правила на бэкенде, если фронт уже проверил'
+  ],
+  right:[0,1,3],
+  expl:`Фронт — про <b>удобство и скорость</b>. Защиты он не даёт: клиент в руках пользователя, любые проверки обходятся через DevTools, curl или Postman. Поэтому правила дублируются: фронт — для человека, бэкенд — для данных. Тестировать нужно оба слоя, причём бэкенд — обязательно <b>мимо</b> формы.`},
+ {k:'single', q:'Разработчик поставил на поле <code>&lt;input maxlength="64"&gt;</code> и сказал, что длину проверять не надо. Твой вывод?',
+  opts:[
+   'Согласиться: браузер физически не даст ввести больше',
+   'Проверить длину запросом в API мимо формы — атрибут снимается в DevTools одним кликом',
+   'Проверить только копипастом длинного текста в поле',
+   'Написать баг на то, что <code>maxlength</code> вообще используется'
+  ],
+  right:1,
+  expl:`<code>maxlength</code> — подсказка браузеру, а не ограничение. Его снимают правкой DOM в DevTools, а запрос можно вообще собрать руками. Кейс на длину всегда идёт <b>двумя уровнями</b>: в UI (не даёт ввести/обрезает) и в API (возвращает 400/422, а не 500 и не молча обрезает).`}
+]});
+
+T({id:'f3', mod:'front', title:'Границы и классы эквивалентности одного поля', tag:'тест-дизайн',
+brief:`<p>Поле <code>Возраст</code>: обязательное, целое число, допустимо <strong>от 18 до 120 включительно</strong>.</p>
+<p>Нужно покрыть поле минимальным набором значений — так, чтобы каждый набранный кейс проверял что-то своё.</p>`,
+questions:[
+ {k:'multi', q:'Отметь значения, которые обязательно должны быть в наборе (границы + по одному представителю каждого класса)',
+  opts:['17','18','19','119','120','121','пустое значение','<code>18.5</code>','<code>abc</code>','<code>-1</code>','<code>60</code> (середина диапазона)','<code>0018</code> с ведущими нулями'],
+  right:[0,1,4,5,6,7,8,9],
+  expl:`Границы берутся парами «снаружи–внутри»: <b>17/18</b> и <b>120/121</b>. Плюс по одному представителю невалидных классов: <b>пусто</b>, <b>дробное</b>, <b>текст</b>, <b>отрицательное</b>. <code>19</code> и <code>119</code> — уже внутри валидного класса, их покрывает любое валидное значение; <code>60</code> — тот же класс, что 19, отдельного смысла нет (одно валидное значение в наборе иметь надо, но не три). <code>0018</code> — хороший дополнительный кейс, но он про формат, а не про границы: в обязательный минимум не входит.`}
+]});
+
+T({id:'f4', mod:'front', title:'Пробелы, регистр и невидимые символы', tag:'теория',
+brief:`<p>Пользователь регистрируется как <code>&nbsp;Anna@Mail.RU&nbsp;</code> (с пробелом в начале и в конце), потом пытается войти как <code>anna@mail.ru</code> — и получает «неверный логин или пароль».</p>`,
+questions:[
+ {k:'single', q:'Как система должна обращаться с email пользователя?',
+  opts:[
+   'Хранить ровно то, что ввели, и сравнивать посимвольно — пользователь сам виноват',
+   'Нормализовать: обрезать пробелы по краям и привести домен к нижнему регистру, сравнивать нормализованные значения',
+   'Запрещать ввод заглавных букв в поле email',
+   'Автоматически исправлять любой ввод на ближайший похожий адрес'
+  ],
+  right:1,
+  expl:`Email нормализуют перед сохранением и сравнением: <code>trim()</code> + нижний регистр (как минимум для домена). Иначе получаем два «разных» аккаунта <code>Anna@mail.ru</code> и <code>anna@mail.ru</code> и невозможность войти. Запрещать заглавные — плохо: пользователь не должен угадывать регистр. «Исправлять на похожий» — вообще опасная магия.`},
+ {k:'multi', q:'Какие кейсы стоит завести на любое текстовое поле, куда пользователь вводит текст руками?',
+  opts:[
+   'Пробелы в начале/конце и только пробелы',
+   'Максимальная длина + на 1 символ больше',
+   'Юникод: эмодзи, кириллица, иероглифы, буквы с диакритикой',
+   'Вставка через копипаст (в т.ч. многострочного текста)',
+   'HTML/скрипт в поле: <code>&lt;b&gt;текст&lt;/b&gt;</code>, <code>&lt;script&gt;alert(1)&lt;/script&gt;</code> — как отображается на других экранах',
+   'Ввод текста ровно за 1 секунду — проверка скорости печати'
+  ],
+  right:[0,1,2,3,4],
+  expl:`Это базовый чек-лист текстового поля. Отдельно про пятый пункт: важно не только «сохранилось ли», а <b>как значение потом отрисуется</b> в списках, письмах и экспорте — там и живёт XSS. Скорость печати к валидации отношения не имеет.`}
+]});
+
+T({id:'f5', mod:'front', title:'Обязательное поле, которого нет в запросе', tag:'теория',
+brief:`<p>Форма профиля: поле <code>Отдел</code> — необязательное. Пользователь оставил его пустым.</p>
+<p>Фронт отправил:</p>
+<pre class="codeblock">PATCH /api/v1/profile
+{ "name": "Анна", "department": "" }</pre>
+<p>В базе у поля <code>department</code> лежало значение <code>QA</code>. После сохранения в базе — пустая строка.</p>`,
+questions:[
+ {k:'single', q:'Есть ли здесь дефект и в чём он?',
+  opts:[
+   'Дефекта нет: пользователь оставил поле пустым, значит хотел его очистить',
+   'Дефект есть: пустое необязательное поле нужно не отправлять вовсе (или отправлять <code>null</code> по контракту), иначе PATCH молча затирает данные',
+   'Дефект в базе: она не должна принимать пустые строки',
+   'Дефект в методе: тут нужен PUT, а не PATCH'
+  ],
+  right:1,
+  expl:`Классика: <code>""</code>, <code>null</code> и «поля нет в запросе» — <b>три разных состояния</b>, и контракт должен их различать. Для PATCH «нет ключа» = не менять, <code>null</code> = очистить. Отправляя <code>""</code> на каждое нетронутое поле, фронт затирает данные, которых пользователь не касался. Про PUT: он как раз заменяет ресурс целиком — тогда затирание было бы ожидаемым поведением, но это другой контракт.`},
+ {k:'multi', q:'Как это проверить руками?',
+  opts:[
+   'Открыть DevTools → Network, посмотреть тело реального запроса от формы',
+   'Сравнить значение в базе (или в GET-ответе) до и после сохранения',
+   'Отправить три варианта тела в API: без ключа, с <code>null</code>, с <code>""</code> — и сравнить результат',
+   'Достаточно посмотреть на форму глазами: если поле пустое, всё в порядке'
+  ],
+  right:[0,1,2],
+  expl:`Глазами по UI такой баг не виден вообще — поле и до, и после выглядит пустым. Видно его только в <b>теле запроса</b> и в <b>состоянии данных</b> до/после.`}
+]});
+
+/* ---------- 02. Валидация на бэкенде ---------- */
+T({id:'b1', mod:'back', title:'Обойти форму: постучаться в API напрямую', tag:'стенд',
+brief:`<p>Ту же регистрацию проверяем с другой стороны. Форму пропускаем — собираем запрос сами, как это сделал бы любой желающий.</p>
+<p>Контракт <code>POST /api/v1/users</code>: <code>email</code> — валидный адрес, <code>age</code> — целое 18–120, <code>name</code> — 2–64 символа. На нарушение контракта сервер обязан отвечать <code>422</code> (или <code>400</code>) и объяснять, какое поле не понравилось.</p>
+<p>Меняй тело запроса и смотри, что сервер реально принимает.</p>`,
+lab:{type:'api', server:'usersV1', method:'POST', path:'/api/v1/users',
+  methods:['GET','POST','PUT','DELETE'],
+  body:'{\n  "name": "Анна",\n  "email": "anna@mail.ru",\n  "age": 30\n}',
+  presets:[
+    {label:'email без домена', body:'{\n  "name": "Анна",\n  "email": "anna@mail",\n  "age": 30\n}'},
+    {label:'возраст 999', body:'{\n  "name": "Анна",\n  "email": "anna@mail.ru",\n  "age": 999\n}'},
+    {label:'age строкой', body:'{\n  "name": "Анна",\n  "email": "anna@mail.ru",\n  "age": "тридцать"\n}'},
+    {label:'без email', body:'{\n  "name": "Анна",\n  "age": 30\n}'}
+  ]},
+goal:{text:'Получить <code>201 Created</code> на теле, которое нарушает контракт', hint:'Попробуй пресет «возраст 999» или email без доменной зоны.'},
+questions:[
+ {k:'multi', q:'Что показал стенд? Отметь всё, что подтвердилось запросами',
+  opts:[
+   'Сервер создаёт пользователя с возрастом вне диапазона 18–120',
+   'Сервер принимает email без доменной зоны',
+   'Если <code>age</code> прислать строкой, сервер отвечает <code>500</code> вместо <code>422</code>',
+   'Если <code>email</code> не прислать вовсе, сервер отвечает <code>500</code>',
+   'Сервер требует заголовок <code>Content-Type: application/json</code>'
+  ],
+  right:[0,1,2,3],
+  expl:`Все четыре дефекта — про <b>отсутствие валидации на сервере</b>. Отдельно обрати внимание на разницу: «принял мусор с 201» и «упал с 500». Первое — тихая порча данных, второе — необработанное исключение. Оба идут в баги, но с разными приоритетами и разными ожидаемыми результатами.`},
+ {k:'single', q:'Что писать в «Ожидаемый результат» баг-репорта про <code>age: 999</code>?',
+  opts:[
+   'Форма не должна давать ввести 999',
+   '<code>422 Unprocessable Entity</code> (или <code>400</code>) с указанием поля <code>age</code> и допустимого диапазона; пользователь не создан',
+   '<code>500 Internal Server Error</code>',
+   '<code>201 Created</code>, но с обрезкой значения до 120'
+  ],
+  right:1,
+  expl:`Ожидаемый результат описывает <b>поведение того слоя, который тестируем</b>. Мы стучались в API — значит ожидаем ответ API: код 4xx, машиночитаемое указание поля и <b>отсутствие записи в базе</b>. Про форму — отдельный баг. Тихая обрезка до 120 хуже отказа: пользователь не узнает, что данные изменили.`}
+]});
+
+T({id:'b2', mod:'back', title: '400, 422, 409 — что когда', tag:'теория',
+brief:`<p>Один и тот же эндпоинт <code>POST /api/v1/users</code>, четыре разных запроса. Нужно сопоставить ситуацию с кодом ответа, который считается правильным.</p>`,
+questions:[
+ {k:'match', q:'Сопоставь ситуацию и ожидаемый код ответа',
+  pairs:[
+   ['Тело — битый JSON, парсер не смог его прочитать','400 Bad Request'],
+   ['JSON валидный, но <code>age = 999</code> — не проходит бизнес-правило','422 Unprocessable Entity'],
+   ['Пользователь с таким email уже существует','409 Conflict'],
+   ['Пользователь создан','201 Created'],
+   ['В базе упало соединение при вставке','500 Internal Server Error']
+  ],
+  expl:`Граница между <b>400 и 422</b>: 400 — «я не смог разобрать запрос» (синтаксис, битый JSON, отсутствующий обязательный параметр в query), 422 — «разобрал, но содержимое не проходит правила». Многие API живут только на 400 — это допустимо, если так написано в контракте; главное, чтобы поведение было единообразным и описанным. <b>409</b> — про конфликт с текущим состоянием, самый частый случай — уникальность. <b>5xx</b> оставляем только для «сервер сам сломался».`}
+]});
+
+T({id:'b3', mod:'back', title:'Уникальность email: где проверять', tag:'теория',
+brief:`<p>При регистрации нужно не дать создать второй аккаунт на тот же email. Фронт перед отправкой формы вызывает <code>GET /api/v1/users/exists?email=…</code> и, если <code>true</code>, показывает ошибку под полем.</p>`,
+questions:[
+ {k:'single', q:'Достаточно ли такой проверки?',
+  opts:[
+   'Да, проверка есть, дубликатов не будет',
+   'Нет: проверка «спросили — потом вставили» не атомарна. Нужно ограничение уникальности в базе и <code>409</code> от сервера на вставку дубликата',
+   'Нет: проверять уникальность вообще не нужно, пусть будут два аккаунта',
+   'Да, если добавить ту же проверку ещё и в мобильном приложении'
+  ],
+  right:1,
+  expl:`Между «спросили exists» и «вставили» проходит время — за него дубликат успевает создать другой запрос (состояние гонки). Единственная надёжная точка — <b>уникальный индекс в базе</b>, а сервер превращает его нарушение в <code>409</code>. Фронтовая проверка остаётся, но как UX-подсказка. Кейс на гонку: отправить два запроса на регистрацию с одним email почти одновременно.`},
+ {k:'multi', q:'Что ещё проверить в эндпоинте <code>users/exists</code>?',
+  opts:[
+   'Что он не позволяет перебором узнать, какие email зарегистрированы в системе',
+   'Что на него стоит ограничение частоты запросов (<code>429</code> при переборе)',
+   'Что он требует авторизацию или капчу',
+   'Что он отвечает быстрее 50 мс'
+  ],
+  right:[0,1,2],
+  expl:`Эндпоинт «есть ли такой email» — это готовый инструмент для перечисления пользователей (user enumeration): им проверяют утёкшие базы на «а тут этот человек зарегистрирован?». Отсюда требования: rate limit, капча/авторизация, и вообще-то предпочтительнее не иметь такого эндпоинта, а сообщать о конфликте уже при отправке формы. Скорость ответа — вопрос производительности, не этой проверки.`}
+]});
+
+T({id:'b4', mod:'back', title:'Сервер, который верит клиенту', tag:'теория',
+brief:`<p>Магазин. Фронт считает корзину и отправляет заказ:</p>
+<pre class="codeblock">POST /api/v1/orders
+{
+  "items": [ { "sku": "A-100", "qty": 2, "price": 1990 } ],
+  "total": 3980,
+  "discount_percent": 0,
+  "delivery": "courier"
+}</pre>
+<p>Сервер создаёт заказ ровно с этими числами.</p>`,
+questions:[
+ {k:'multi', q:'Какие запросы ты отправишь первым делом и почему это дефект?',
+  opts:[
+   '<code>"price": 1</code> — цену должен брать сервер из своего каталога, а не из запроса',
+   '<code>"total": 0</code> при непустой корзине — сумму сервер обязан пересчитывать сам',
+   '<code>"discount_percent": 100</code> — скидку сервер обязан считать по своим правилам',
+   '<code>"qty": -5</code> — отрицательное количество уводит сумму в минус',
+   '<code>"delivery": "телепорт"</code> — значение не из списка допустимых',
+   '<code>"items": []</code> — пустой заказ должен отклоняться',
+   'Запрос без поля <code>price</code> должен отклоняться с ошибкой'
+  ],
+  right:[0,1,2,3,4,5],
+  expl:`Правило «не доверяй данным от клиента» касается не только строк, но и <b>чисел, сумм, скидок и идентификаторов</b>. Цена, итог и скидка — вычисляемые на сервере поля. Последний вариант — наоборот: запрос <i>без</i> <code>price</code> — это как раз правильный контракт, отклонять его не за что; цену сервер обязан взять из своего каталога, а не требовать от клиента. Такие баги дорогие: они не про UI, а про деньги.`},
+ {k:'single', q:'Как сформулировать заголовок баг-репорта на <code>"price": 1</code>?',
+  opts:[
+   'Не работает корзина',
+   'API создаёт заказ по цене из запроса вместо цены из каталога (можно купить товар за 1 ₽)',
+   'Проблема с ценой',
+   'Разработчик не проверяет цену'
+  ],
+  right:1,
+  expl:`Хороший заголовок = <b>где</b> + <b>что происходит</b> + <b>во что это выливается</b>, одной строкой и без оценок людей. По такому заголовку задачу можно приоритизировать, не открывая её.`}
+]});
+
+/* ---------- 03. HTTP-коды и REST ---------- */
+T({id:'h1', mod:'http', title:'Разобрать коды по группам', tag:'теория',
+brief:`<p>Быстрая разминка: сопоставить код и его смысл. Это тот минимум, который спрашивают на собеседовании и который каждый день видно в Network.</p>`,
+questions:[
+ {k:'match', q:'Код → что он означает',
+  pairs:[
+   ['200','Успех, в ответе есть тело'],
+   ['201','Создан новый ресурс, обычно с заголовком Location'],
+   ['204','Успех, тела в ответе нет'],
+   ['301','Ресурс переехал навсегда на другой адрес'],
+   ['401','Не аутентифицирован: нет или истёк токен/сессия'],
+   ['403','Аутентифицирован, но прав на это действие нет'],
+   ['404','Ресурса по этому адресу нет'],
+   ['429','Слишком много запросов, сработал rate limit'],
+   ['502','Шлюз получил некорректный ответ от сервиса за ним'],
+   ['503','Сервис временно недоступен: перегрузка или деплой']
+  ],
+  expl:`Ориентиры по группам: <b>2xx</b> — получилось, <b>3xx</b> — иди в другое место, <b>4xx</b> — виноват запрос (клиент), <b>5xx</b> — виноват сервер. Практический вывод для тестировщика: <b>4xx в баг-репорте требует показать запрос</b> (возможно, ошибка в нём), а <b>5xx — это почти всегда баг сервера</b>, даже если запрос был кривой: на кривой запрос обязан приходить 4xx.`}
+]});
+
+T({id:'h2', mod:'http', title:'401 или 403 — и что показать пользователю', tag:'теория',
+brief:`<p>Три ситуации в одном приложении:</p>
+<ol>
+<li>Токен пользователя истёк, он нажимает «Сохранить».</li>
+<li>Обычный пользователь открывает <code>/admin/users</code>.</li>
+<li>Пользователь открывает счёт <code>/invoices/1042</code>, который принадлежит другой компании.</li>
+</ol>`,
+questions:[
+ {k:'match', q:'Какой код ожидается в каждой ситуации',
+  pairs:[
+   ['Истёк токен','401 — переавторизоваться'],
+   ['Нет роли для раздела админки','403 — прав недостаточно'],
+   ['Чужой счёт другой компании','404 — как будто ресурса не существует']
+  ],
+  expl:`<b>401</b> = «я тебя не знаю» → фронт ведёт на логин или молча обновляет токен. <b>403</b> = «знаю, но нельзя» → показываем «недостаточно прав», на логин не выкидываем. Третий случай тоньше: формально это тоже 403, но по чужим объектам многие API специально отвечают <b>404</b>, чтобы не подтверждать, что счёт 1042 вообще существует. Оба варианта защищены — главное, чтобы <b>ответ не отличался</b> от ответа на несуществующий id: разница в коде, тексте или времени ответа уже позволяет перебирать чужие id.`},
+ {k:'single', q:'Фронт на <code>403</code> от <code>/admin/users</code> выкидывает пользователя на страницу логина. Баг?',
+  opts:[
+   'Нет, любой отказ — повод перелогиниться',
+   'Да: на 403 пользователь уже аутентифицирован, разлогинивать его нельзя — нужно показать «недостаточно прав» и оставить в приложении',
+   'Нет, если после логина его вернут обратно',
+   'Да, потому что должен быть 401'
+  ],
+  right:1,
+  expl:`Смешивание 401 и 403 на фронте — очень частый баг: пользователь по кругу логинится и снова получает отказ, теряя несохранённую работу. Проверять просто: подделать ответ в DevTools или зайти под ролью без прав.`}
+]});
+
+T({id:'h3', mod:'http', title:'Идемпотентность', tag:'теория',
+brief:`<p>Метод <strong>идемпотентен</strong>, если повторить его один раз или пять раз подряд — <em>состояние на сервере</em> будет одинаковым.</p>
+<p>Это не про то, что ответ будет байт-в-байт тот же, и не про то, что метод «безопасный».</p>`,
+questions:[
+ {k:'multi', q:'Отметь методы, которые по спецификации идемпотентны',
+  opts:['GET','HEAD','OPTIONS','PUT','DELETE','POST','PATCH'],
+  right:[0,1,2,3,4],
+  expl:`<b>GET/HEAD/OPTIONS</b> вообще ничего не меняют (safe). <b>PUT</b> — «положи ресурс в такое состояние»: сколько раз ни повтори, состояние одно. <b>DELETE</b> — после первого раза ресурса нет, повтор ничего не меняет. <b>POST</b> — не идемпотентен: два запроса = два заказа. <b>PATCH</b> — в общем случае нет (<code>{"counter": "+1"}</code> при повторе даст другое значение), хотя конкретная реализация может быть идемпотентной.`},
+ {k:'single', q:'Пользователь дважды нажал «Оплатить», ушли два <code>POST /payments</code>. Списалось две суммы. Что должно быть в системе?',
+  opts:[
+   'Ничего, пользователь сам виноват — не надо было тыкать дважды',
+   'Блокировка кнопки на фронте после первого нажатия — этого достаточно',
+   'Ключ идемпотентности (<code>Idempotency-Key</code>) в запросе: сервер по нему распознаёт повтор и возвращает результат первой операции. Блокировка кнопки — дополнительно',
+   'Задержка 5 секунд перед отправкой платежа'
+  ],
+  right:2,
+  expl:`Блокировка кнопки лечит только один сценарий из многих: остаются повторная отправка после таймаута, ретрай мобильного клиента при потере сети, обновление страницы. Надёжно закрывается <b>только на сервере</b> — ключом идемпотентности. Кейс на проверку: отправить два одинаковых POST с одним <code>Idempotency-Key</code> и убедиться, что списание одно, а второй ответ повторяет первый.`}
+]});
+
+T({id:'h4', mod:'http', title:'Повторный DELETE: 404 — это баг?', tag:'теория',
+brief:`<p><code>DELETE /api/v1/orders/7</code> → <code>204 No Content</code>.</p>
+<p>Тот же запрос ещё раз → <code>404 Not Found</code>.</p>
+<p>Разработчик говорит: «DELETE идемпотентен, значит второй раз тоже должен быть 204, у нас баг». Тестировщик рядом говорит: «404 нормально».</p>`,
+questions:[
+ {k:'single', q:'Кто прав?',
+  opts:[
+   'Разработчик: идемпотентность требует одинакового кода ответа',
+   'Тестировщик: идемпотентность — про состояние сервера, а не про код ответа; и 204, и 404 допустимы. Смотрим, что написано в контракте API',
+   'Оба неправы: на повторный DELETE нужен 409',
+   'Оба неправы: нужен 200 с телом'
+  ],
+  right:1,
+  expl:`После обоих запросов заказа 7 нет — состояние одинаковое, идемпотентность соблюдена. Код ответа спецификация не фиксирует: <b>204</b> («всё равно нет — цель достигнута») и <b>404</b> («такого ресурса нет») оба встречаются. Настоящий баг здесь другой: <b>контракт молчит</b>, поэтому фронт и мобильное приложение угадывают поведение по-разному. Оформляется как вопрос/задача на документацию, а не как дефект кода.`},
+ {k:'single', q:'Что важнее проверить в этом же эндпоинте?',
+  opts:[
+   'Что DELETE чужого заказа возвращает 403/404 и не удаляет его',
+   'Что DELETE работает и по HTTP, и по HTTPS',
+   'Что после DELETE запись исчезла из интерфейса менее чем за 100 мс',
+   'Что DELETE возвращает тело ответа'
+  ],
+  right:0,
+  expl:`Первое, что проверяют у любого эндпоинта с идентификатором в адресе — <b>чей это объект</b>. Удаление чужих данных по подставленному id (IDOR) на порядок дороже спора про 204 против 404. Этим займёмся в модуле «Защита данных».`}
+]});
+
+T({id:'h5', mod:'http', title:'PUT против PATCH', tag:'теория',
+brief:`<p>Профиль в базе:</p>
+<pre class="codeblock">{ "id": 7, "name": "Анна", "email": "anna@mail.ru", "phone": "+7 900 000 00 00", "department": "QA" }</pre>
+<p>Клиент отправляет:</p>
+<pre class="codeblock">PUT /api/v1/users/7
+{ "name": "Анна Соколова" }</pre>`,
+questions:[
+ {k:'single', q:'Что должно произойти по семантике PUT?',
+  opts:[
+   'Изменится только <code>name</code>, остальные поля останутся',
+   'PUT заменяет ресурс целиком: остальные поля должны быть очищены — или сервер обязан ответить 400, потребовав полное представление',
+   'Сервер вернёт 405, PUT для профиля недопустим',
+   'Сервер сам догадается, что имелся в виду PATCH'
+  ],
+  right:1,
+  expl:`<b>PUT</b> — «пусть ресурс станет вот таким», полная замена. <b>PATCH</b> — «применить эти изменения», частичное обновление. Самый частый реальный дефект: сервер объявляет PUT, а ведёт себя как PATCH (или наоборот). Проверяется одним запросом с неполным телом — и сравнением состояния до/после через GET.`},
+ {k:'multi', q:'Какие кейсы обязательно нужны на <code>PATCH /api/v1/users/7</code>?',
+  opts:[
+   'Пустое тело <code>{}</code> — ничего не меняется, ответ не 5xx',
+   'Поле <code>null</code> — очищает значение (если так в контракте)',
+   'Неизвестное поле <code>{"nickname": "x"}</code> — игнорируется или 422, но не 500',
+   'Попытка изменить <code>id</code> или <code>role</code> — запрещена сервером',
+   'Изменение всех полей сразу',
+   'PATCH обязан возвращать <code>200</code> с телом, ответ <code>204</code> без тела — дефект'
+  ],
+  right:[0,1,2,3,4],
+  expl:`Первые пять — обязательные. Четвёртый пункт критичен: если PATCH профиля принимает <code>"role": "admin"</code>, любой пользователь делает себя администратором (mass assignment) — один из самых частых серьёзных дефектов в API. А вот <code>200</code> против <code>204</code> спецификация не диктует: оба допустимы, дефект тут только один — если поведение не совпадает с описанным в контракте.`}
+]});
+
+T({id:'h6', mod:'http', title:'Ответ на создание ресурса', tag:'теория',
+brief:`<p>Проверяем <code>POST /api/v1/orders</code>. Заказ создаётся, в ответ приходит:</p>
+<pre class="codeblock">HTTP/1.1 200 OK
+Content-Type: text/html; charset=utf-8
+
+Заказ успешно создан!</pre>`,
+questions:[
+ {k:'multi', q:'Что здесь не так с точки зрения контракта REST API?',
+  opts:[
+   'Код должен быть <code>201 Created</code>, а не <code>200 OK</code>',
+   'Нет заголовка <code>Location</code> с адресом созданного заказа',
+   'В теле нет id заказа — клиент не может ничего с ним сделать дальше',
+   '<code>Content-Type: text/html</code> вместо <code>application/json</code>',
+   'Текст ответа на русском языке'
+  ],
+  right:[0,1,2,3],
+  expl:`Ответ на создание должен дать клиенту <b>идентификатор</b> и способ добраться до ресурса: <code>201</code> + <code>Location: /api/v1/orders/812</code> + JSON-тело с id. Без этого фронт вынужден угадывать (например, запрашивать список и брать последний заказ — так появляются гонки и «чужие» заказы на экране). Язык текста здесь ни при чём, тем более что для API текст вообще не главное — главное машиночитаемые поля.`}
+]});
+
+/* ---------- 04. Текст ошибки и подсказки ---------- */
+T({id:'m1', mod:'msg', title:'Сообщение, из которого понятно, что делать', tag:'теория',
+brief:`<p>Пользователь заполняет форму смены пароля и получает под полем красный текст. Четыре варианта — от одной и той же ошибки.</p>`,
+questions:[
+ {k:'single', q:'Какое сообщение годится в продакшн?',
+  opts:[
+   '<code>Error 0x80070057: invalid parameter</code>',
+   '<code>Что-то пошло не так. Попробуйте позже.</code>',
+   '<code>Пароль должен быть не короче 8 символов и содержать хотя бы одну цифру.</code>',
+   '<code>Неверный пароль!!! Внимательно читайте требования!</code>'
+  ],
+  right:2,
+  expl:`Хорошее сообщение об ошибке отвечает на два вопроса: <b>что не так</b> и <b>что мне сделать</b>. Никаких кодов для внутреннего употребления, никакого обвинения пользователя, никаких восклицательных знаков. И формулировка в терминах пользователя, а не системы.`},
+ {k:'multi', q:'Что плохого в «Что-то пошло не так. Попробуйте позже»?',
+  opts:[
+   'Не сказано, что именно не так — пользователь не знает, чинить ли ему что-то',
+   'Не сказано, сохранились ли уже введённые данные',
+   'Не сказано, что делать: повторить, обновить страницу, обратиться в поддержку',
+   'Нет идентификатора обращения, с которым можно прийти в поддержку',
+   'Оно вообще не должно появляться ни при каких обстоятельствах'
+  ],
+  right:[0,1,2,3],
+  expl:`Общая заглушка нужна — как последний рубеж на неожиданные <b>5xx</b>, когда конкретики действительно нет. Но и её делают полезной: «Не удалось сохранить черновик. Мы уже разбираемся. Код обращения: 8f21c». Дефект не в существовании заглушки, а в том, что её показывают <b>вместо</b> внятной ошибки валидации.`}
+]});
+
+T({id:'m2', mod:'msg', title:'Что нельзя показывать пользователю', tag:'теория',
+brief:`<p>Форма входа. При неудачной попытке приложение показывает:</p>
+<pre class="codeblock">Ошибка входа
+User with email anna@mail.ru not found in table users
+  at AuthService.login (/srv/app/services/auth.js:88:13)
+  db: postgres://app_user:Sup3rS3cret@10.0.14.7:5432/prod
+trace_id: 4f2c-91ab</pre>`,
+questions:[
+ {k:'multi', q:'Что из этого нельзя отдавать в интерфейс?',
+  opts:[
+   'Стектрейс и путь к файлу на сервере',
+   'Строка подключения к базе с логином и паролем',
+   'Внутренний IP-адрес и порт',
+   'Формулировка «email не найден» — она сообщает, зарегистрирован ли такой адрес',
+   'Название таблицы и структура базы',
+   '<code>trace_id</code> обращения'
+  ],
+  right:[0,1,2,3,4],
+  expl:`Всё, кроме последнего, — утечка внутреннего устройства системы. Каждый пункт по отдельности помогает атакующему: пути и стек подсказывают стек технологий и версии, IP и креды — прямой доступ, «email не найден» — перечисление пользователей. <b><code>trace_id</code> показывать как раз полезно</b>: пользователь называет его в поддержке, и по нему за секунду находят настоящий лог. Правильный текст: «Неверный email или пароль» + trace_id, а подробности — в логи сервера.`},
+ {k:'single', q:'Почему на вход отвечают «Неверный email или пароль», а не «Такого пользователя нет»?',
+  opts:[
+   'Так короче',
+   'Чтобы по форме входа нельзя было проверить, зарегистрирован ли конкретный человек в сервисе',
+   'Чтобы пользователь чаще обращался в поддержку',
+   'Это требование HTTP'
+  ],
+  right:1,
+  expl:`Это защита от <b>user enumeration</b>. Ответы должны быть неотличимы: одинаковый текст, одинаковый код ответа и, в идеале, одинаковое время ответа (иначе разницу видно по таймингам в Network). Кейс на проверку: сравнить ответ на существующий и несуществующий email — код, тело, время.`}
+]});
+
+T({id:'m3', mod:'msg', title:'Куда показывать ошибку', tag:'теория',
+brief:`<p>Разные ошибки требуют разного способа показать их пользователю. Сопоставь.</p>`,
+questions:[
+ {k:'match', q:'Ситуация → способ показать',
+  pairs:[
+   ['Email введён с опечаткой','Текст под самим полем, поле подсвечено'],
+   ['Сервер вернул 500 при сохранении','Уведомление с возможностью повторить, введённое не потеряно'],
+   ['Токен истёк, сессия закончилась','Модальное окно входа поверх экрана, после входа возврат туда же'],
+   ['Загружаемый файл больше 2 МБ','Ошибка рядом с полем загрузки, ещё до отправки на сервер'],
+   ['Нет сети','Постоянная плашка о состоянии соединения, действия отложены']
+  ],
+  expl:`Правило простое: ошибка живёт <b>рядом с местом, где её можно исправить</b>. Ошибки полей — под полями (и никогда единым списком «в форме 4 ошибки»). Ошибки операций — рядом с операцией, с кнопкой «Повторить». И главное требование, которое чаще всего забывают проверить: <b>введённые данные не должны пропадать</b> ни при одной из этих ошибок.`},
+ {k:'multi', q:'Что проверить в поведении формы при ошибке сервера?',
+  opts:[
+   'Введённые данные сохранились в полях',
+   'Кнопка отправки снова активна (не осталась в состоянии загрузки навсегда)',
+   'Повторная отправка не создаёт дубликат, если первая всё-таки прошла',
+   'Фокус переведён на первое поле с ошибкой',
+   'Спиннер крутится не дольше 30 минут'
+  ],
+  right:[0,1,2,3],
+  expl:`Второй и третий пункты — самые частые находки. «Вечный спиннер» после ошибки сети и <b>дубликат заказа</b> при повторном нажатии — оба находятся одним и тем же приёмом: обрубить сеть в DevTools (Network → Offline / throttling) на момент отправки.`}
+]});
+
+/* ---------- 05. DevTools ---------- */
+T({id:'d1', mod:'dt', title:'Кнопка «Оплатить» крутит спиннер', tag:'стенд',
+brief:`<p>Жалоба из поддержки: «нажимаю Оплатить — крутится колёсико и ничего». Открываем DevTools на этой странице и смотрим, что улетело в сеть.</p>
+<p>Кликай по строкам в Network — справа откроются заголовки, тело запроса и ответ.</p>`,
+lab:{type:'net', url:'https://shop.test/checkout',
+ requests:[
+  {m:'GET',u:'/checkout',st:200,ty:'document',size:'14.2 kB',t0:0,t:180,
+   req:{'accept':'text/html','cookie':'session=s_anna_7f3c'},
+   res:{'content-type':'text/html; charset=utf-8','cache-control':'no-store'},
+   body:'<!doctype html>\n<html lang="ru">…страница оформления заказа…'},
+  {m:'GET',u:'/api/v1/cart',st:200,ty:'fetch',size:'612 B',t0:190,t:95,
+   req:{'accept':'application/json','cookie':'session=s_anna_7f3c'},
+   res:{'content-type':'application/json'},
+   body:'{\n  "items": [ { "sku": "A-100", "qty": 2, "price": 1990 } ],\n  "total": 3980\n}'},
+  {m:'GET',u:'/static/app.4f21.js',st:200,ty:'script',size:'284 kB',t0:190,t:220,
+   req:{'accept':'*/*'},res:{'content-type':'application/javascript'},
+   body:'/* сборка фронтенда */'},
+  {m:'POST',u:'/api/v1/payments',st:500,ty:'fetch',size:'218 B',t0:2400,t:1840,
+   req:{'content-type':'application/json','cookie':'session=s_anna_7f3c','x-request-id':'req-8f21c9'},
+   payload:'{\n  "order_id": 812,\n  "amount": 3980,\n  "method": "card",\n  "card_token": "tok_9f31"\n}',
+   res:{'content-type':'application/json','x-trace-id':'4f2c-91ab-77de'},
+   body:'{\n  "error": "internal_error",\n  "message": "Cannot invoke \\"PaymentProvider.charge()\\" because provider is null",\n  "trace_id": "4f2c-91ab-77de"\n}'},
+  {m:'POST',u:'/api/v1/metrics',st:204,ty:'fetch',size:'0 B',t0:4300,t:60,
+   req:{'content-type':'application/json'},payload:'{"event":"payment_failed"}',
+   res:{},body:''}
+ ],
+ console:[
+  {lvl:'err',txt:'POST https://shop.test/api/v1/payments 500 (Internal Server Error)',src:'app.4f21.js:1:24180'},
+  {lvl:'err',txt:'Uncaught (in promise) PaymentError: request failed',src:'app.4f21.js:1:24310'}
+ ],
+ storage:{cookies:[{n:'session',v:'s_anna_7f3c',d:'shop.test',p:'/',ho:true,se:true,ss:'Lax',ex:'2026-09-01'}],local:[['cart_draft','{"sku":"A-100"}']],session:[]}},
+questions:[
+ {k:'single', q:'Какой запрос виноват в «вечном спиннере»?',
+  opts:['<code>GET /api/v1/cart</code>','<code>GET /static/app.4f21.js</code>','<code>POST /api/v1/payments</code>','<code>POST /api/v1/metrics</code>'],
+  right:2,
+  expl:`Единственный запрос не из группы 2xx — <code>POST /api/v1/payments</code> со статусом <b>500</b>. Спиннер не убрали, потому что фронт не обработал ошибку (в консоли висит необработанное исключение) — это уже второй, отдельный дефект.`},
+ {k:'multi', q:'Что положить в баг-репорт из того, что видно в DevTools?',
+  opts:[
+   'Метод, адрес и код ответа: <code>POST /api/v1/payments → 500</code>',
+   'Тело запроса (Payload) — по нему воспроизводят',
+   'Тело ответа и <code>trace_id: 4f2c-91ab-77de</code> — по нему разработчик найдёт лог',
+   'Точное время запроса и окружение (стенд, версия сборки)',
+   'Скриншот спиннера как единственное доказательство',
+   'Логин и пароль тестового пользователя в открытом виде'
+  ],
+  right:[0,1,2,3],
+  expl:`<b>trace_id</b> из ответа — самая полезная строка в отчёте: с ней разработчик находит серверный лог за секунды вместо получаса. Скриншот прикладывают <i>дополнительно</i>, а не вместо запроса. Учётные данные в тикет не пишут — указывают роль пользователя («покупатель без сохранённых карт»).`},
+ {k:'single', q:'Тут два дефекта. Второй — какой?',
+  opts:[
+   'Запрос <code>/api/v1/metrics</code> вернул 204 без тела',
+   'Фронт не обрабатывает ошибку платежа: спиннер не снимается, пользователь не видит сообщения',
+   'Файл <code>app.4f21.js</code> слишком большой',
+   'Корзина запрашивается отдельным запросом'
+  ],
+  right:1,
+  expl:`Полезная привычка: увидев 5xx, не останавливаться. Ошибка сервера — баг бэкенда, <b>необработанная</b> ошибка сервера — ещё и баг фронта. Заводятся оба, потому что чинят их разные люди и по-разному: сервер перестанет падать, но обработку ошибки всё равно нужно написать.`}
+]});
+
+T({id:'d2', mod:'dt', title:'Красное в консоли: CORS', tag:'стенд',
+brief:`<p>После переезда API на отдельный домен корзина перестала загружаться. В интерфейсе — пустой экран, в консоли — красное.</p>
+<p>Загляни в Console и в Network.</p>`,
+lab:{type:'net', url:'https://shop.test/cart', tab:'console',
+ requests:[
+  {m:'GET',u:'/cart',st:200,ty:'document',size:'11.8 kB',t0:0,t:150,req:{},res:{'content-type':'text/html'},body:'…'},
+  {m:'OPTIONS',u:'https://api.shop.test/v1/cart',st:204,ty:'preflight',size:'0 B',t0:160,t:70,
+   req:{'origin':'https://shop.test','access-control-request-method':'GET'},
+   res:{'allow':'GET, POST','access-control-allow-methods':'GET, POST'},body:''},
+  {m:'GET',u:'https://api.shop.test/v1/cart',st:0,ty:'fetch',size:'0 B',t0:240,t:40,
+   req:{'origin':'https://shop.test','accept':'application/json'},
+   res:{'content-type':'application/json'},
+   body:'(запрос заблокирован браузером: CORS)'}
+ ],
+ console:[
+  {lvl:'err',txt:'Access to fetch at \'https://api.shop.test/v1/cart\' from origin \'https://shop.test\' has been blocked by CORS policy: No \'Access-Control-Allow-Origin\' header is present on the requested resource.',src:'app.js:1:9120'},
+  {lvl:'err',txt:'GET https://api.shop.test/v1/cart net::ERR_FAILED',src:'app.js:1:9130'},
+  {lvl:'warn',txt:'Cart render skipped: no data',src:'cart.js:44:7'}
+ ],
+ storage:{cookies:[{n:'session',v:'s_anna_7f3c',d:'shop.test',p:'/',ho:true,se:true,ss:'Lax',ex:'2026-09-01'}],local:[],session:[]}},
+questions:[
+ {k:'single', q:'Чья это проблема?',
+  opts:[
+   'Фронтенда: неправильно написан вызов <code>fetch</code>',
+   'Сервера API: в ответе нет заголовка <code>Access-Control-Allow-Origin</code> с доменом <code>shop.test</code>',
+   'Браузера пользователя: нужно отключить защиту',
+   'Сети: запрос не дошёл до сервера'
+  ],
+  right:1,
+  expl:`CORS настраивается <b>на стороне отвечающего сервера</b> (или на прокси/ingress перед ним). Браузер лишь исполняет решение сервера: ответ пришёл, но без разрешающего заголовка — и браузер не отдаёт его JS-коду. Запрос при этом до сервера дошёл: в Network видно и preflight <code>OPTIONS 204</code>, и сам GET.`},
+ {k:'multi', q:'Как отличить CORS от «сервер недоступен»? Отметь верные приёмы',
+  opts:[
+   'Повторить тот же запрос через curl/Postman: если данные приходят, значит сервер жив и дело в CORS',
+   'В Network смотреть, был ли <code>OPTIONS</code>-preflight и что ответил сервер',
+   'Проверить, что в ответе есть <code>Access-Control-Allow-Origin</code> и что там за домен',
+   'Открыть API-адрес в отдельной вкладке — там CORS не применяется, ответ будет виден',
+   'Перезагрузить страницу пять раз'
+  ],
+  right:[0,1,2,3],
+  expl:`Ключевая мысль: <b>CORS — ограничение браузера, а не сервера</b>. Тот же запрос из curl или из адресной строки проходит спокойно — по этому и отличают. И типичная ловушка: в Network статус GET-запроса может выглядеть как <code>200</code>, а данные всё равно не доехали до кода — читать надо консоль.`}
+]});
+
+T({id:'d3', mod:'dt', title:'Application: где лежит сессия', tag:'стенд',
+brief:`<p>Смотрим, что приложение хранит в браузере. Открой в DevTools вкладку <strong>Application</strong> и изучи куки и localStorage.</p>
+<p>Напоминание про флаги: <code>HttpOnly</code> — cookie недоступна из JavaScript; <code>Secure</code> — отправляется только по HTTPS; <code>SameSite</code> — отправлять ли её при запросах с чужих сайтов.</p>`,
+lab:{type:'net', url:'https://bank.test/account', tab:'application',
+ requests:[
+  {m:'GET',u:'/account',st:200,ty:'document',size:'9.1 kB',t0:0,t:140,req:{},res:{'set-cookie':'session=s_anna_7f3c; Path=/'},body:'…'},
+  {m:'GET',u:'/api/v1/account',st:200,ty:'fetch',size:'340 B',t0:150,t:88,req:{'cookie':'session=s_anna_7f3c'},res:{'content-type':'application/json'},
+   body:'{ "user": "anna", "balance": 128400 }'}
+ ],
+ console:[{lvl:'log',txt:'auth: token restored from localStorage',src:'auth.js:12:5'}],
+ storage:{cookies:[
+   {n:'session',v:'s_anna_7f3c',d:'bank.test',p:'/',ho:false,se:false,ss:'None',ex:'2027-08-25'},
+   {n:'lang',v:'ru',d:'bank.test',p:'/',ho:false,se:false,ss:'Lax',ex:'2026-12-31'}
+  ],
+  local:[['auth_token','eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhbm5hIiwicm9sZSI6InVzZXIifQ.sig'],
+         ['user_email','anna@mail.ru'],['card_last4','4417'],['debug_mode','false']],
+  session:[['csrf','7f21ab']]}},
+questions:[
+ {k:'multi', q:'Отметь всё, что здесь заслуживает баг-репорта или вопроса безопаснику',
+  opts:[
+   'Cookie <code>session</code> без флага <code>HttpOnly</code> — её может прочитать любой JS на странице',
+   'Cookie <code>session</code> без флага <code>Secure</code> — уйдёт по HTTP в открытом виде',
+   '<code>SameSite=None</code> у сессионной cookie — открывает дорогу CSRF-запросам с чужих сайтов',
+   'Срок жизни сессионной cookie — год',
+   'Токен авторизации лежит в <code>localStorage</code>: он доступен из JS, значит любая XSS его забирает',
+   'Cookie <code>lang=ru</code> без <code>HttpOnly</code>',
+   'В <code>localStorage</code> хранится email и последние 4 цифры карты'
+  ],
+  right:[0,1,2,3,4,6],
+  expl:`Единственное безобидное здесь — <code>lang=ru</code>: языку интерфейса <code>HttpOnly</code> не нужен, его как раз читает JS. Всё остальное — реальные замечания. Про localStorage: он <b>не защищён от JS в принципе</b>, поэтому токены и персональные данные в нём держать нельзя — для сессии есть cookie с <code>HttpOnly + Secure + SameSite</code>. Год жизни сессии означает, что украденная cookie работает год.`},
+ {k:'single', q:'Как проверить, что <code>HttpOnly</code> действительно работает?',
+  opts:[
+   'Посмотреть галочку в колонке HttpOnly и поверить ей',
+   'В консоли выполнить <code>document.cookie</code>: cookie с <code>HttpOnly</code> в выводе быть не должно',
+   'Удалить cookie и посмотреть, разлогинит ли',
+   'Проверить это невозможно из браузера'
+  ],
+  right:1,
+  expl:`<code>document.cookie</code> в консоли — проверка в одну строку, и она показывает <b>фактическое</b> поведение, а не заявленное в таблице. Тот же приём для <code>localStorage</code>: <code>Object.entries(localStorage)</code> — сразу видно всё, что утечёт при XSS.`}
+]});
+
+T({id:'d4', mod:'dt', title:'Медленно — но где именно', tag:'стенд',
+brief:`<p>«Отчёты открываются вечность». Надо ответить не «да, медленно», а <strong>где</strong> уходит время: сервер думает, сеть тащит или фронт рисует.</p>
+<p>Смотри колонку Time и вкладку Timing у каждого запроса.</p>`,
+lab:{type:'net', url:'https://shop.test/reports',
+ requests:[
+  {m:'GET',u:'/reports',st:200,ty:'document',size:'12.0 kB',t0:0,t:160,req:{},res:{},body:'…',
+   timing:{'Queueing':'2 мс','Stalled':'4 мс','TTFB (ожидание ответа)':'120 мс','Content Download':'34 мс'}},
+  {m:'GET',u:'/api/v1/reports?from=2026-01-01&to=2026-08-25',st:200,ty:'fetch',size:'1.1 MB',t0:170,t:8420,
+   req:{'accept':'application/json'},res:{'content-type':'application/json','content-encoding':'identity'},
+   body:'{ "rows": [ …14 320 записей… ] }',
+   timing:{'Queueing':'1 мс','Stalled':'3 мс','TTFB (ожидание ответа)':'7 980 мс','Content Download':'436 мс'}},
+  {m:'GET',u:'/api/v1/reports/summary',st:200,ty:'fetch',size:'210 B',t0:170,t:210,req:{},res:{},body:'{ "count": 14320 }',
+   timing:{'Queueing':'1 мс','Stalled':'2 мс','TTFB (ожидание ответа)':'190 мс','Content Download':'17 мс'}},
+  {m:'GET',u:'/static/chart.9a12.js',st:200,ty:'script',size:'92 kB',t0:170,t:120,req:{},res:{},body:'…',
+   timing:{'Queueing':'1 мс','Stalled':'1 мс','TTFB (ожидание ответа)':'40 мс','Content Download':'78 мс'}}
+ ],
+ console:[{lvl:'warn',txt:'[Violation] \'setTimeout\' handler took 1240ms',src:'chart.9a12.js:2:88'}],
+ storage:{cookies:[{n:'session',v:'s_anna_7f3c',d:'shop.test',p:'/',ho:true,se:true,ss:'Lax',ex:'2026-09-01'}],local:[],session:[]}},
+questions:[
+ {k:'single', q:'Где основная потеря времени?',
+  opts:[
+   'Сеть медленная: 1.1 МБ долго скачиваются',
+   'Сервер долго готовит ответ: TTFB запроса <code>/api/v1/reports</code> — почти 8 секунд',
+   'Фронт долго рисует график',
+   'Слишком много запросов на странице'
+  ],
+  right:1,
+  expl:`Разбор по <b>Timing</b>: из 8.4 секунды ожидание ответа (TTFB) — 7.98 с, а скачивание — 0.44 с. Значит время уходит <b>внутри сервера</b> (скорее всего запрос в базу без индекса), а не в сети. Отрисовка тоже подтормаживает (1.24 с в консоли), но это на порядок меньше.`},
+ {k:'multi', q:'Что ещё стоит написать в тикете про производительность?',
+  opts:[
+   'Что ответ приходит без сжатия: <code>content-encoding: identity</code> на 1.1 МБ JSON',
+   'Что в ответе 14 320 записей без постраничности',
+   'Что предупреждение <code>setTimeout handler took 1240ms</code> — отдельная проблема отрисовки',
+   'Замеры: сколько раз повторили, разброс, размер выборки, стенд',
+   'Что интернет у пользователя, вероятно, плохой'
+  ],
+  right:[0,1,2,3],
+  expl:`Тикет на производительность без <b>цифр и условий замера</b> нежизнеспособен: «медленно» невозможно проверить после починки. Указываем период выборки, объём данных, TTFB, число повторов и окружение. Отсутствие пагинации и сжатия — конкретные, проверяемые причины, с которыми можно идти к разработчику.`}
+]});
+
+T({id:'d5', mod:'dt', title:'Инструменты, которые экономят часы', tag:'теория',
+brief:`<p>Набор приёмов в DevTools, который отличает «посмотрел глазами» от «локализовал за пять минут».</p>`,
+questions:[
+ {k:'match', q:'Задача → инструмент',
+  pairs:[
+   ['Проверить, что баг не из-за старого кэша','Network → Disable cache + hard reload'],
+   ['Не потерять запросы при переходе на другую страницу','Network → Preserve log'],
+   ['Повторить запрос в консоли или отдать разработчику','Правый клик по запросу → Copy as cURL'],
+   ['Посмотреть поведение на медленной сети и при обрыве','Network → throttling / Offline'],
+   ['Понять, почему элемент не кликается','Elements → инспектор и вкладка Computed'],
+   ['Проверить вход «с нуля», без старой сессии','Окно инкогнито или Application → Clear site data']
+  ],
+  expl:`Три приёма, которые снимают больше всего ложных багов: <b>Disable cache</b> (иначе половина «не воспроизводится у меня» — это старая сборка), <b>Preserve log</b> (без него запросы перед редиректом на логин исчезают, и непонятно, что вообще произошло) и <b>Copy as cURL</b> — вложенная в тикет команда curl превращает «у меня не работает» в воспроизводимый факт.`},
+ {k:'single', q:'Баг «не воспроизводится у разработчика». Первое, что проверяешь?',
+  opts:[
+   'Что вы оба на одном стенде и на одной версии сборки, и что кэш отключён',
+   'Что у разработчика тот же монитор',
+   'Что баг вообще есть — возможно, показалось',
+   'Оставляешь тикет закрытым как «не воспроизводится»'
+  ],
+  right:0,
+  expl:`Порядок сужения: <b>окружение → версия → пользователь и его данные → браузер и кэш</b>. Отсюда и обязательные поля в баг-репорте: стенд, версия/сборка, роль пользователя, браузер, время. Половина «не воспроизводится» умирает на первом же пункте.`}
+]});
+
+/* ---------- 06. Локализация багов ---------- */
+T({id:'l1', mod:'loc', title:'Кнопка не делает ничего', tag:'стенд',
+brief:`<p>«Нажимаю Сохранить — ничего не происходит, даже ошибки нет».</p>
+<p>Первый вопрос, на который надо ответить: <strong>запрос вообще ушёл?</strong> Смотри Network и Console.</p>`,
+lab:{type:'net', url:'https://shop.test/profile', tab:'console',
+ requests:[
+  {m:'GET',u:'/profile',st:200,ty:'document',size:'10.4 kB',t0:0,t:150,req:{},res:{},body:'…'},
+  {m:'GET',u:'/api/v1/profile',st:200,ty:'fetch',size:'280 B',t0:160,t:90,req:{},res:{},
+   body:'{ "id": 7, "name": "Анна", "department": null }'},
+  {m:'GET',u:'/static/app.5c03.js',st:200,ty:'script',size:'301 kB',t0:160,t:240,req:{},res:{},body:'…'}
+ ],
+ console:[
+  {lvl:'err',txt:'Uncaught TypeError: Cannot read properties of null (reading \'toUpperCase\')\n    at buildPayload (app.5c03.js:1:41208)\n    at onSaveClick (app.5c03.js:1:41390)',src:'app.5c03.js:1:41208'}
+ ],
+ storage:{cookies:[{n:'session',v:'s_anna_7f3c',d:'shop.test',p:'/',ho:true,se:true,ss:'Lax',ex:'2026-09-01'}],local:[],session:[]}},
+questions:[
+ {k:'single', q:'На каком слое дефект?',
+  opts:[
+   'Бэкенд: не принимает сохранение',
+   'Фронтенд: обработчик кнопки падает с исключением до отправки запроса — в Network запроса на сохранение нет вообще',
+   'База данных: поле <code>department</code> пустое',
+   'Сеть: запрос не дошёл'
+  ],
+  right:1,
+  expl:`Логика в один шаг: <b>в Network нет POST/PATCH</b> — значит до сервера дело не дошло, и виноват клиент. Консоль подтверждает: <code>onSaveClick → buildPayload</code> падает на <code>null.toUpperCase()</code>. Причина — <code>"department": null</code> в ответе профиля, к которому фронт не готов.`},
+ {k:'multi', q:'Что важно указать в баг-репорте, кроме шагов?',
+  opts:[
+   'Текст исключения из консоли и место падения (<code>buildPayload</code>)',
+   'Что предусловие — пустое поле <code>department</code> у пользователя (с непустым баг не воспроизводится)',
+   'Что запроса в Network нет — это отличает баг от серверного',
+   'Ответ <code>GET /api/v1/profile</code>, в котором пришёл <code>null</code>',
+   'Цвет кнопки «Сохранить»'
+  ],
+  right:[0,1,2,3],
+  expl:`Второй пункт — то, из-за чего такие баги закрывают как «не воспроизводится»: у разработчика в профиле отдел заполнен, и всё работает. <b>Данные пользователя — часть шагов воспроизведения.</b> Отдельно стоит задать вопрос: а <code>null</code> в ответе — вообще ожидаемое значение по контракту? Возможно, чинить надо оба слоя.`}
+]});
+
+T({id:'l2', mod:'loc', title:'200 OK, но список пустой', tag:'разбор',
+brief:`<p>Пользователь: «мои заказы пропали». Менеджер видит в админке 4 заказа этого пользователя.</p>
+<p>Смотрим запрос со страницы «Мои заказы»:</p>
+<pre class="codeblock">GET /api/v1/orders?status=active
+200 OK
+{ "items": [], "total": 0 }</pre>
+<p>Прямо в базе:</p>
+<pre class="codeblock">SELECT id, status, tenant_id FROM orders WHERE user_id = 7;
+
+ id  | status    | tenant_id
+-----+-----------+-----------
+ 812 | active    | 2
+ 813 | active    | 2
+ 814 | completed | 2
+ 815 | active    | 2
+
+-- у пользователя 7 в таблице users: tenant_id = 3</pre>`,
+questions:[
+ {k:'single', q:'Где дефект вероятнее всего?',
+  opts:[
+   'На фронте: не отрисовывает пришедшие заказы',
+   'В данных: у заказов <code>tenant_id = 2</code>, а у пользователя <code>3</code> — фильтр по организации законно ничего не находит',
+   'В HTTP-коде: должен быть 404, а не 200',
+   'В базе: таблица <code>orders</code> повреждена'
+  ],
+  right:1,
+  expl:`Фронт получил <code>{"items": []}</code> — он отрисовал ровно то, что пришло, претензий к нему нет. Сервер отфильтровал по <code>tenant_id</code> пользователя и честно не нашёл ничего. Настоящий вопрос: <b>почему заказы лежат в другой организации</b> — миграция, тестовые данные, баг при создании. Про 200: пустой список — это успешный ответ, 404 здесь был бы неверен (ресурс «коллекция заказов» существует, он просто пуст).`},
+ {k:'multi', q:'Как сузить дальше, прежде чем идти к разработчику?',
+  opts:[
+   'Проверить, воспроизводится ли у другого пользователя того же tenant',
+   'Посмотреть, что вернёт тот же запрос без фильтра <code>status=active</code>',
+   'Посмотреть в логах сервера, какой SQL-запрос или какие параметры фильтра ушли в базу',
+   'Выяснить, когда заказы создавались и что тогда происходило с данными (миграция, импорт)',
+   'Попросить разработчика посмотреть — это не задача тестировщика'
+  ],
+  right:[0,1,2,3],
+  expl:`Каждый пункт отсекает гипотезу: «у всех или у одного» отделяет данные от кода, «без фильтра» проверяет сам фильтр, логи показывают фактические параметры, история создания указывает на источник кривых данных. К разработчику приходят с <b>уже суженной</b> областью — так задача решается за один заход, а не за пять переписок.`}
+]});
+
+T({id:'l3', mod:'loc', title:'Воспроизводится только у неё', tag:'разбор',
+brief:`<p>Один и тот же сценарий: у тестировщицы форма падает, у разработчика — работает. Один стенд, один браузер.</p>`,
+questions:[
+ {k:'multi', q:'Какие проверки реально сужают область, а какие — трата времени?',
+  opts:[
+   'Повторить в окне инкогнито (без расширений, без старых куки и кэша)',
+   'Повторить под другим пользователем с той же ролью',
+   'Повторить под пользователем с другой ролью',
+   'Сравнить версию сборки: в футере/<code>/version</code>/имени js-файла',
+   'Проверить данные конкретного пользователя: пустые поля, нестандартные значения, много записей',
+   'Обновить страницу с очисткой кэша (hard reload)',
+   'Перезагрузить ноутбук',
+   'Попросить разработчика попробовать «ещё раз, повнимательнее»'
+  ],
+  right:[0,1,2,3,4,5],
+  expl:`Работающая последовательность: <b>инкогнито → hard reload → другой пользователь той же роли → другая роль → сравнить версии → посмотреть данные пользователя</b>. Она за пять минут отвечает на вопрос «это про код, про данные или про моё окружение». Перезагрузка машины и «попробуй внимательнее» не отвечают ни на что.`},
+ {k:'single', q:'Оказалось: у неё в профиле 3 000 записей в списке, у разработчика — 12. Как это оформить?',
+  opts:[
+   'Закрыть как «особенность окружения»',
+   'Баг с указанием предусловия: воспроизводится при большом количестве записей (≈3 000), не воспроизводится при 12 — и приложить способ набить данные',
+   'Написать «у меня много данных, у тебя мало»',
+   'Ничего не оформлять: у обычных пользователей столько не бывает'
+  ],
+  right:1,
+  expl:`Условие воспроизведения — <b>часть дефекта</b>, а не оправдание. Тикет, в котором сказано «начинается от N записей» и есть скрипт/инструкция для набивки данных, разработчик воспроизводит сам с первой попытки. И заодно это готовый кейс в регресс: производительность и пагинацию проверяют на объёме, а не на 12 строках.`}
+]});
+
+T({id:'l4', mod:'loc', title:'Баг-репорт, который не вернут', tag:'разбор',
+brief:`<p>Черновик тикета:</p>
+<pre class="codeblock">Тема: не работает загрузка
+Описание: заходил, нажимал, ничего не грузится, срочно посмотрите
+Приоритет: блокер</pre>`,
+questions:[
+ {k:'multi', q:'Чего здесь не хватает?',
+  opts:[
+   'Окружение: стенд, версия сборки, браузер, роль пользователя',
+   'Шаги воспроизведения по одному действию, с конкретными данными',
+   'Фактический и ожидаемый результат — отдельно',
+   'Артефакты: запрос и ответ из Network, ошибка из консоли, <code>trace_id</code>, время',
+   'Частота воспроизведения: всегда / иногда / один раз',
+   'Обоснование приоритета: что именно заблокировано и для кого',
+   'Эмоциональная оценка происходящего'
+  ],
+  right:[0,1,2,3,4,5],
+  expl:`Формулировка «ожидаемый результат» — самое частое упущение: без неё тикет превращается в спор о том, баг ли это вообще. И ссылка на источник ожидания (ТЗ, макет, аналитика, поведение прода) снимает этот спор заранее.`},
+ {k:'single', q:'Какая формулировка шага лучше?',
+  opts:[
+   'Заполнить форму и отправить',
+   'Ввести в поле «Возраст» значение <code>999</code>, остальные поля заполнить валидными данными, нажать «Создать аккаунт»',
+   'Попробовать сломать форму возрастом',
+   'Сделать как обычно'
+  ],
+  right:1,
+  expl:`Шаг должен воспроизводиться <b>другим человеком без уточняющих вопросов</b>: конкретное поле, конкретное значение, конкретная кнопка. Проверка на качество шагов — отдать тикет коллеге, который не участвовал, и посмотреть, дойдёт ли он до того же результата.`}
+]});
+
+/* ---------- 07. Тест-дизайн ---------- */
+T({id:'t1', mod:'td', title:'Набор кейсов на загрузку аватара', tag:'тест-дизайн',
+brief:`<p><strong>Требование:</strong> пользователь загружает аватар. Допустимы <code>.jpg</code> и <code>.png</code>, размер файла до 2 МБ включительно, минимальное разрешение 200×200 px. Файл сохраняется в профиль и показывается в шапке.</p>
+<p>Нужно собрать набор проверок — так, чтобы ни один класс не остался без кейса.</p>`,
+questions:[
+ {k:'multi', q:'Отметь проверки, которые обязательно должны быть в наборе',
+  opts:[
+   'Валидный <code>.jpg</code> 500 КБ, 400×400 — сохраняется и виден в шапке',
+   'Файл ровно 2 МБ (граница) — принимается',
+   'Файл 2 МБ + 1 байт — отклоняется с понятной ошибкой',
+   'Файл <code>.gif</code> или <code>.pdf</code> — отклоняется',
+   'Файл <code>avatar.jpg</code>, внутри которого на самом деле не картинка (подменено расширение)',
+   'Картинка 100×100 — отклоняется по минимальному разрешению',
+   'Файл размером 0 байт',
+   'Загрузка того же файла второй раз (перезапись предыдущего аватара)',
+   'Отмена загрузки на середине и обрыв сети',
+   'Загрузка через API мимо формы — с файлом 50 МБ и с <code>.exe</code>',
+   'Проверить, что кнопка «Загрузить» синего цвета'
+  ],
+  right:[0,1,2,3,4,5,6,7,8,9],
+  expl:`Ключевые пункты, которые новички пропускают: <b>подмена расширения</b> (проверять надо содержимое файла, а не имя — иначе на сервер заезжает что угодно), <b>0 байт</b>, <b>обрыв загрузки</b> и <b>обход формы через API</b>. Цвет кнопки — не про эту функциональность; вёрстка проверяется отдельно и не в наборе на валидацию.`},
+ {k:'single', q:'Файл 3 МБ форма отклонила. Что проверить сразу после этого?',
+  opts:[
+   'Ничего, требование выполнено',
+   'Что тот же файл отклоняется и на сервере — запросом мимо формы; и что предыдущий аватар при этом не потерялся',
+   'Что ошибка написана красным цветом',
+   'Что файл появился в списке загрузок браузера'
+  ],
+  right:1,
+  expl:`Два вопроса после каждой сработавшей валидации: <b>держит ли то же правило сервер</b> и <b>что стало с прежним состоянием</b>. Второй случай — частый баг: неудачная загрузка обнуляет уже существующий аватар.`}
+]});
+
+T({id:'t2', mod:'td', title:'Сколько комбинаций и как не проверять все', tag:'тест-дизайн',
+brief:`<p>Форма оформления заказа зависит от четырёх параметров:</p>
+<ul>
+<li>браузер: Chrome, Safari, Firefox</li>
+<li>роль: гость, обычный пользователь, сотрудник со скидкой</li>
+<li>оплата: карта, СБП, наличными, счёт для юрлица</li>
+<li>язык интерфейса: русский, английский</li>
+</ul>`,
+questions:[
+ {k:'single', q:'Сколько комбинаций даёт полный перебор?',
+  opts:['12','24','72','144'],
+  right:2,
+  expl:`3 × 3 × 4 × 2 = <b>72</b>. Полный перебор растёт как произведение, поэтому на реальной системе он неисполним почти сразу: добавили один параметр с тремя значениями — стало 216.`},
+ {k:'multi', q:'Что верно про попарное тестирование (pairwise)?',
+  opts:[
+   'Набор строится так, чтобы каждая пара значений разных параметров встретилась хотя бы раз',
+   'Оно опирается на то, что большинство дефектов вызывает одно значение или взаимодействие двух значений',
+   'Оно сокращает 72 комбинации до примерно десятка кейсов',
+   'Оно гарантированно находит все дефекты',
+   'Комбинации, критичные для бизнеса (например, оплата счётом для юрлица), всё равно проверяются отдельно, вне попарного набора'
+  ],
+  right:[0,1,2,4],
+  expl:`Pairwise — <b>сокращение риска, а не гарантия</b>: дефект, который проявляется только на тройке значений, он может пропустить. Поэтому попарный набор всегда дополняют явными кейсами на важные и опасные сочетания. Аргумент для обсуждения с командой звучит так: «72 комбинации мы не проверим никогда, 12 попарных плюс 4 критичных — проверим за день».`}
+]});
+
+T({id:'t3', mod:'td', title:'Severity и priority — не одно и то же', tag:'тест-дизайн',
+brief:`<p><strong>Severity</strong> (важность) — насколько сильно дефект ломает функциональность; ставит тестировщик.<br>
+<strong>Priority</strong> (срочность) — насколько срочно это чинить; ставит менеджер/владелец продукта, исходя из бизнеса.</p>
+<p>Они независимы: бывают все четыре сочетания.</p>`,
+questions:[
+ {k:'match', q:'Дефект → сочетание',
+  pairs:[
+   ['Опечатка в названии компании на главной странице','низкая severity, высокая priority'],
+   ['Падает экспорт отчёта, которым пользуются раз в год','высокая severity, низкая priority'],
+   ['Не проходит оплата у всех пользователей','высокая severity, высокая priority'],
+   ['Криво выровнена иконка в редко открываемом разделе','низкая severity, низкая priority']
+  ],
+  expl:`Первая пара — любимый пример: технически ерунда, а исправить надо до вечера, потому что это видят все и это репутация. Вторая — наоборот: функция сломана целиком, но ждёт следующего спринта. Вывод для работы: <b>не спорь о priority</b>, это не твоя ответственность — но severity обосновывай фактами (сколько пользователей, есть ли обходной путь, теряются ли данные).`}
+]});
+
+T({id:'t4', mod:'td', title:'Что делает тест-кейс негодным', tag:'тест-дизайн',
+brief:`<p>Из набора на регресс:</p>
+<pre class="codeblock">TC-14  Проверить, что форма работает корректно
+  Шаги:  1. Открыть форму
+         2. Заполнить поля
+         3. Проверить результат
+  Ожидаемый результат: всё работает
+
+TC-15  (выполняется только после TC-14)
+  Шаги:  1. Нажать «Далее»
+  Ожидаемый результат: переход на шаг 2</pre>`,
+questions:[
+ {k:'multi', q:'Что здесь не так?',
+  opts:[
+   '«Работает корректно» — не проверяемый результат: два человека проверят разное',
+   'Не указано, какими данными заполнять поля',
+   'Ожидаемый результат не описывает конкретное наблюдаемое состояние',
+   'TC-15 зависит от TC-14: упал первый — второй нельзя ни выполнить, ни оценить',
+   'Нет предусловий: какой пользователь, какой стенд, какие данные должны быть в системе',
+   'Кейсов слишком мало'
+  ],
+  right:[0,1,2,3,4],
+  expl:`Признак пригодного кейса: <b>его может выполнить человек, который не участвовал в его написании, и получить однозначный вердикт</b>. Зависимость между кейсами — отдельная беда: она превращает набор в цепочку, где одно падение гасит всё остальное и скрывает настоящую картину. Каждый кейс должен сам приводить систему в нужное состояние (через предусловия или подготовку данных).`},
+ {k:'single', q:'Как переписать ожидаемый результат TC-14?',
+  opts:[
+   'Форма отправляется без ошибок',
+   'Появляется сообщение «Аккаунт создан», пользователь <code>anna@mail.ru</code> виден в списке пользователей, на email уходит письмо-подтверждение',
+   'Всё хорошо, ошибок нет',
+   'Форма работает так, как задумано разработчиком'
+  ],
+  right:1,
+  expl:`Ожидаемый результат — это <b>наблюдаемые факты</b>: что показано на экране, что изменилось в данных, какие побочные эффекты произошли (письмо, запись в журнале, событие в аналитике). «Без ошибок» проверить невозможно, а значит и автоматизировать нельзя.`}
+]});
+
+/* ---------- 08. Защита данных ---------- */
+T({id:'s1', mod:'sec', title:'Подменить cookie и войти под другим', tag:'стенд',
+brief:`<p>Интернет-банк. Ты авторизована как <strong>Анна</strong>, сессия лежит в cookie <code>session</code>.</p>
+<p>В переписке с поддержкой нашёлся скриншот сессии другого клиента — <strong>Павла</strong>:</p>
+<pre class="codeblock">session=s_pavel_91ab</pre>
+<p>Задача — проверить, привязана ли сессия к своему владельцу. Открой на стенде <em>Application → Cookies</em>, впиши чужое значение и обнови страницу.</p>`,
+lab:{type:'bank', mode:'cookie'},
+goal:{text:'Оказаться в личном кабинете Павла, не зная его пароля', hint:'Замени значение cookie <code>session</code> на <code>s_pavel_91ab</code> и нажми «Обновить страницу».'},
+questions:[
+ {k:'single', q:'Как называется то, что ты сейчас сделала?',
+  opts:[
+   'Взлом пароля',
+   'Захват сессии (session hijacking): чужой идентификатор сессии принимается сервером как есть',
+   'SQL-инъекция',
+   'Обход валидации на фронте'
+  ],
+  right:1,
+  expl:`Пароль вообще не участвовал: серверу достаточно предъявить идентификатор сессии. Именно поэтому cookie сессии — <b>такой же секрет, как пароль</b>, и всё в системе строится вокруг того, чтобы её нельзя было ни прочитать (<code>HttpOnly</code>), ни перехватить (<code>Secure</code> + HTTPS), ни подставить с чужого сайта (<code>SameSite</code>), ни угадать (длинный случайный токен), ни использовать вечно (срок жизни + инвалидация при выходе).`},
+ {k:'multi', q:'Что писать в дефекты по итогам этой проверки?',
+  opts:[
+   'Идентификаторы сессий предсказуемы: <code>s_&lt;имя&gt;_&lt;4 символа&gt;</code> — их можно перебирать и угадывать',
+   'Сессия не привязана ни к чему дополнительному и не инвалидируется при подозрительной смене клиента',
+   'Cookie сессии доступна из JavaScript — значит любая XSS означает угон аккаунта',
+   'В журнале не появилось записи о входе в аккаунт Павла из другого контекста',
+   'Пользователь Павел должен был выбрать более сложный пароль'
+  ],
+  right:[0,1,2,3],
+  expl:`Пароль Павла тут ни при чём — это ключевой вывод. А вот отсутствие записи в журнале аудита превращает инцидент в невидимый: даже задним числом никто не узнает, что в кабинет заходили. К аудиту вернёмся в последней задаче модуля.`},
+ {k:'single', q:'Что должно происходить при предъявлении неизвестного или чужого идентификатора сессии?',
+  opts:[
+   'Сервер отдаёт данные владельца этого идентификатора — так и работает сессия',
+   '<code>401</code> и требование войти заново; при этом длинный случайный токен делает подбор бессмысленным, а событие попадает в журнал',
+   '<code>500</code>, потому что произошла нештатная ситуация',
+   'Сервер молча отдаёт пустую страницу'
+  ],
+  right:1,
+  expl:`Сессия по чужому валидному токену работать <i>будет</i> — это природа cookie-сессий, поэтому защита строится на невозможности его добыть. А вот на <b>неизвестный</b> токен обязателен <code>401</code> (не 500 и не пустая страница) и запись в журнал: серия таких попыток — это как раз перебор.`}
+]});
+
+T({id:'s2', mod:'sec', title:'Стать администратором, поправив токен', tag:'стенд',
+brief:`<p>Другое приложение того же банка использует JWT: токен лежит в <code>localStorage</code>, состоит из трёх частей через точку — <code>заголовок.данные.подпись</code>, первые две части это просто <strong>base64</strong>, их читает кто угодно.</p>
+<p>На стенде видно разобранные данные токена. Задача — проверить, <strong>проверяет ли сервер подпись</strong>: измени роль в данных, собери токен обратно и обнови страницу.</p>`,
+lab:{type:'bank', mode:'jwt'},
+goal:{text:'Открыть раздел администратора со списком всех клиентов', hint:'В редакторе данных поменяй <code>"role": "user"</code> на <code>"role": "admin"</code>, нажми «Собрать токен», затем «Обновить страницу».'},
+questions:[
+ {k:'single', q:'Почему это сработало?',
+  opts:[
+   'JWT можно менять — так и задумано, это открытый формат',
+   'Сервер прочитал данные из токена, но не проверил подпись — значит доверился тому, что прислал клиент',
+   'В браузере отключилась защита',
+   'Роль администратора выдаётся всем по умолчанию'
+  ],
+  right:1,
+  expl:`JWT и правда <b>не зашифрован</b> — прочитать его содержимое может любой, и это нормально. Ненормально другое: сервер обязан <b>проверить подпись</b> своим секретом и только потом верить содержимому. Здесь проверки нет — и токен превращается в форму, которую заполняет сам пользователь. Родственная ошибка: сервер принимает <code>"alg": "none"</code> или позволяет клиенту выбрать алгоритм подписи.`},
+ {k:'multi', q:'Что ещё проверить в работе с токенами?',
+  opts:[
+   'Что подпись проверяется: любое изменение любой части токена даёт <code>401</code>',
+   'Что истёкший токен (<code>exp</code> в прошлом) отклоняется',
+   'Что права проверяются на сервере по данным сервера, а не по роли из токена',
+   'Что после выхода токен перестаёт работать',
+   'Что токен не уходит в URL, в логи и в аналитику',
+   'Что токен красиво выглядит'
+  ],
+  right:[0,1,2,3,4],
+  expl:`Пункт про <b>проверку прав на сервере</b> — главный. Даже с идеальной подписью роль в токене остаётся утверждением клиента о себе; решение «пускать или нет» принимает сервер по своим данным. И проверка «токен в URL» находит утечки в самых неожиданных местах: ссылки в письмах, <code>Referer</code>, логи прокси, системы аналитики.`}
+]});
+
+T({id:'s3', mod:'sec', title:'Чужой счёт по подставленному id', tag:'стенд',
+brief:`<p>Ты авторизована как <strong>Анна</strong> (организация <code>tenant 3</code>). В интерфейсе доступен один счёт — <code>1041</code>.</p>
+<p>Контракт: счёт, не принадлежащий текущему пользователю, отдавать нельзя — ожидается <code>403</code> или <code>404</code>.</p>
+<p>Меняй id в адресе и смотри, что отвечает сервер. Попробуй и другие методы.</p>`,
+lab:{type:'api', server:'invoices', method:'GET', path:'/api/v1/invoices/1041',
+  methods:['GET','PATCH','DELETE'],
+  body:'{\n  "status": "paid"\n}',
+  presets:[
+   {label:'свой счёт 1041', method:'GET', path:'/api/v1/invoices/1041'},
+   {label:'счёт 1042', method:'GET', path:'/api/v1/invoices/1042'},
+   {label:'счёт 9999', method:'GET', path:'/api/v1/invoices/9999'},
+   {label:'изменить 1042', method:'PATCH', path:'/api/v1/invoices/1042', body:'{\n  "status": "paid"\n}'}
+  ]},
+goal:{text:'Получить <code>200</code> с данными счёта, который принадлежит другой организации', hint:'Попробуй <code>GET /api/v1/invoices/1042</code> — id идут подряд.'},
+questions:[
+ {k:'single', q:'Как называется этот класс дефектов?',
+  opts:[
+   'IDOR / нарушение авторизации на уровне объекта: сервер проверяет, что пользователь вошёл, но не проверяет, что объект его',
+   'Подделка межсайтового запроса (CSRF)',
+   'Внедрение SQL-кода',
+   'Ошибка валидации входных данных'
+  ],
+  right:0,
+  expl:`Аутентификация есть — сервер знает, что это Анна. Не хватает <b>авторизации на уровне объекта</b>: перед выдачей счёта 1042 никто не спросил, чей он. Последовательные числовые id превращают дефект в выгрузку всей базы простым перебором. Это ровно то, чем проверяется <b>каждый</b> эндпоинт с идентификатором в адресе.`},
+ {k:'multi', q:'Что показал стенд и что из этого пойдёт в дефекты?',
+  opts:[
+   '<code>GET</code> чужого счёта отдаёт <code>200</code> и полные данные вместо <code>403/404</code>',
+   '<code>PATCH</code> чужого счёта проходит — можно ещё и менять чужие данные',
+   'Несуществующий счёт отвечает <code>404</code> — а чужой <code>200</code>: по разнице ответов легко искать существующие id',
+   'Ответ на чужой счёт содержит персональные данные владельца',
+   'Сервер отвечает слишком быстро'
+  ],
+  right:[0,1,2,3],
+  expl:`Отдельно оцени серьёзность: чтение чужого — плохо, <b>изменение чужого</b> — критично. И приложи в тикет масштаб: «id последовательные, за минуту скриптом выгружаются все счёта» — это то, что превращает «нашли баг» в приоритет на сегодня.`},
+ {k:'single', q:'Где чинится такой дефект?',
+  opts:[
+   'На фронте: не показывать ссылки на чужие счета',
+   'На сервере: проверка владельца при каждом обращении к объекту, в самом запросе к данным (<code>WHERE id = ? AND tenant_id = ?</code>)',
+   'Заменой числовых id на длинные случайные — этого достаточно',
+   'Запретом менять адрес в браузере'
+  ],
+  right:1,
+  expl:`Скрыть ссылку — не защита: адрес набирается руками. Случайные идентификаторы (UUID) лишь усложняют перебор, но не запрещают доступ по угаданной или подсмотренной ссылке — это «безопасность через незнание». Единственное настоящее место — <b>проверка владельца на сервере</b>, желательно прямо в условии выборки данных.`}
+]});
+
+T({id:'s4', mod:'sec', title:'Идентификация, аутентификация, авторизация', tag:'теория',
+brief:`<p>Три слова, которые в тикетах путают чаще всего — а от них зависит, какой код ответа правильный и кому нести дефект.</p>`,
+questions:[
+ {k:'match', q:'Понятие → что это',
+  pairs:[
+   ['Идентификация','Пользователь называет, кто он: логин, email, номер карты'],
+   ['Аутентификация','Система убеждается, что это правда он: пароль, код из СМС, ключ'],
+   ['Авторизация','Система решает, что именно ему разрешено делать с этим объектом'],
+   ['Аудит','Остаётся запись: кто, что, когда и с каким результатом сделал']
+  ],
+  expl:`Практическая польза: <b>401</b> — провалилась аутентификация, <b>403</b> — авторизация. Если в тикете написано «ошибка авторизации», а на деле истёк токен — разработчик пойдёт искать не там. А аудит — четвёртый, самый забываемый слой: без него невозможно ни разобрать инцидент, ни доказать, что данных не касались.`},
+ {k:'single', q:'Пользователя лишили роли «менеджер», пока он работал в системе. Что должно произойти?',
+  opts:[
+   'Ничего: до конца сессии он остаётся менеджером',
+   'Права должны перестать действовать на следующем же действии — авторизация проверяется на каждый запрос, а не один раз при входе',
+   'Он должен получить 401 и войти заново',
+   'Система должна закрыться на техобслуживание'
+  ],
+  right:1,
+  expl:`Проверка прав <b>на каждый запрос</b>, из актуального состояния — иначе увольнение сотрудника не вступает в силу, пока он сам не выйдет из системы. Это готовый тест-кейс: открыть два окна, в одном отобрать роль, во втором продолжить работать — и посмотреть, на каком шаге система это заметит. 401 здесь неверен: пользователь по-прежнему тот, просто ему больше нельзя (403).`}
+]});
+
+T({id:'s5', mod:'sec', title:'Флаги cookie: от чего каждый защищает', tag:'теория',
+brief:`<p>Один заголовок — и половина класса атак закрыта:</p>
+<pre class="codeblock">Set-Cookie: session=8f21…; HttpOnly; Secure; SameSite=Lax; Max-Age=1800; Path=/</pre>`,
+questions:[
+ {k:'match', q:'Флаг → что он даёт',
+  pairs:[
+   ['HttpOnly','Cookie не читается из JavaScript — XSS не унесёт сессию'],
+   ['Secure','Cookie уходит только по HTTPS, не утечёт в открытом виде'],
+   ['SameSite','Cookie не прикрепляется к запросам с чужих сайтов — защита от CSRF'],
+   ['Max-Age / Expires','Ограничивает время, в течение которого украденная cookie работает'],
+   ['Path / Domain','Ограничивают, каким адресам и поддоменам cookie вообще отправляется']
+  ],
+  expl:`Как проверять быстро: в <b>Application → Cookies</b> видны все флаги списком; <code>document.cookie</code> в консоли покажет, что реально доступно из JS. Ловушка в спецификации: <code>SameSite=None</code> <b>обязан</b> идти вместе с <code>Secure</code>, иначе браузер cookie не примет вообще — и в интерфейсе это выглядит как «внезапно разлогинивает».`},
+ {k:'multi', q:'Что проверить про завершение сессии?',
+  opts:[
+   'После нажатия «Выйти» старая cookie/токен больше не работают на сервере (а не просто удалены в браузере)',
+   'Кнопка «Назад» после выхода не показывает данные из кэша страницы',
+   'Смена пароля завершает все остальные активные сессии',
+   'Сессия истекает по неактивности',
+   'При выходе очищается <code>localStorage</code> с персональными данными',
+   'После выхода стирается история браузера'
+  ],
+  right:[0,1,2,3,4],
+  expl:`Самый частый дефект здесь — <b>выход только на клиенте</b>: cookie удалили в браузере, а на сервере сессия жива, и подставленное старое значение снова работает. Проверяется ровно так, как в первой задаче модуля: сохранить значение cookie до выхода, выйти, вставить обратно, обновить страницу.`}
+]});
+
+T({id:'s6', mod:'sec', title:'Журнал аудита: чего в нём нет', tag:'разбор',
+brief:`<p>Разбор инцидента: кто-то смотрел чужие счета. Просим журнал аудита за этот час и получаем:</p>
+<pre class="codeblock">2026-08-25 11:04:12  login ok    anna
+2026-08-25 11:07:40  view        invoice
+2026-08-25 11:08:02  view        invoice
+2026-08-25 11:08:20  update      invoice
+2026-08-25 11:12:55  export      report   file=all_clients_2026.xlsx
+2026-08-25 11:13:10  login ok    anna     password=Qwerty123! card=4417 0000 1111 4417</pre>`,
+questions:[
+ {k:'multi', q:'Что не так с этим журналом?',
+  opts:[
+   'Не видно, какой именно объект открывали: нет id счёта',
+   'Не видно, кто выполнял действие в строках <code>view</code>/<code>update</code> — нет пользователя',
+   'Нет результата действия: разрешено или отказано',
+   'Нет контекста: IP-адрес, устройство, идентификатор сессии',
+   'В журнал попали пароль и полный номер карты — так делать нельзя никогда',
+   'Не видно, что именно изменил <code>update</code>: старое и новое значение',
+   'Нет отметки о неудачных попытках входа и отказах доступа',
+   'Время указано без часового пояса',
+   'Записей слишком мало для одного часа'
+  ],
+  right:[0,1,2,3,4,5,6,7],
+  expl:`Годная запись аудита отвечает на пять вопросов: <b>кто, что, над каким объектом, когда (с зоной) и с каким результатом</b>. Здесь нет ни одного полного ответа — по такому журналу инцидент разобрать нельзя. Отдельно: <b>секреты и полные номера карт в логах — это уже собственный дефект безопасности</b>, независимо от инцидента; маскируют до <code>****4417</code>, пароли не логируют вообще. И <code>export</code> файла со всеми клиентами — событие, которое обязано быть заметным: такие действия отслеживают отдельно.`},
+ {k:'multi', q:'Какие события обязаны попадать в журнал?',
+  opts:[
+   'Вход, выход, неудачные попытки входа',
+   'Отказы в доступе (403) и обращения к чужим объектам',
+   'Изменение прав и роли пользователя',
+   'Смена пароля, email, телефона',
+   'Массовые выгрузки и экспорт данных',
+   'Просмотр персональных данных другого человека',
+   'Каждое нажатие кнопки в интерфейсе'
+  ],
+  right:[0,1,2,3,4,5],
+  expl:`Правило отбора: в журнал идёт то, что <b>меняет права, деньги или доступ к персональным данным</b> — и все отказы. Логировать каждый клик бессмысленно: важные события утонут в шуме, а сам журнал станет хранилищем персональных данных. И последнее требование, которое почти никогда не проверяют: <b>журнал должен быть неизменяемым</b> — если пользователь (или администратор) может отредактировать записи, аудита фактически нет.`}
+]});
+
+/* ============================== СОСТОЯНИЕ ============================== */
+const LSKEY = 'bagodrom.progress.v1';
+let ST = {res:{}};
+try{ const raw = localStorage.getItem(LSKEY); if(raw){ const p = JSON.parse(raw); if(p && p.res) ST = p; } }catch(e){}
+function save(){ try{ localStorage.setItem(LSKEY, JSON.stringify(ST)); }catch(e){} }
+
+const app = document.getElementById('app');
+const toastEl = document.getElementById('toast');
+let toastT = null;
+function toast(msg){
+  toastEl.textContent = msg; toastEl.classList.add('is-on');
+  clearTimeout(toastT); toastT = setTimeout(()=>toastEl.classList.remove('is-on'), 2600);
+}
+const task = id => TASKS.find(t=>t.id===id);
+const tasksOf = mod => TASKS.filter(t=>t.mod===mod);
+const maxOf = t => t.questions.length + (t.goal?1:0);
+const resOf = id => ST.res[id] || null;
+const isOk = id => !!(ST.res[id] && ST.res[id].ok);
+function modStats(mod){
+  const list = tasksOf(mod);
+  return {total:list.length, done:list.filter(t=>isOk(t.id)).length};
+}
+function updateXp(){
+  const done = TASKS.filter(t=>isOk(t.id)).length;
+  document.getElementById('xpDone').textContent = done;
+  document.getElementById('xpAll').textContent = TASKS.length;
+  document.getElementById('xpBar').style.width = (TASKS.length? done/TASKS.length*100:0)+'%';
+}
+function firstUnfinished(){
+  for(const m of MODULES){ const t = tasksOf(m.id).find(x=>!isOk(x.id)); if(t) return t; }
+  return null;
+}
+
+/* ============================== РОУТЕР ============================== */
+function go(hash){ if(location.hash===hash) render(); else location.hash = hash; }
+window.addEventListener('hashchange', render);
+document.getElementById('brandBtn').onclick = ()=>go('#/');
+document.getElementById('resetBtn').onclick = ()=>{
+  if(confirm('Сбросить весь прогресс? Ответы и пройденные задачи будут удалены.')){
+    ST = {res:{}}; save(); updateXp(); render(); toast('Прогресс сброшен');
+  }
+};
+
+function render(){
+  const h = location.hash.replace(/^#/,'');
+  window.scrollTo({top:0,behavior:'instant'});
+  if(h.startsWith('/t/')){ const t = task(h.slice(3)); if(t) return viewTask(t); }
+  if(h.startsWith('/m/')){ const m = MODULES.find(x=>x.id===h.slice(3)); if(m) return viewModule(m); }
+  viewHome();
+}
+
+/* ============================== ГЛАВНАЯ ============================== */
+function viewHome(){
+  const next = firstUnfinished();
+  const doneCount = TASKS.filter(t=>isOk(t.id)).length;
+  const labCount = TASKS.filter(t=>t.lab).length;
+  app.innerHTML = `
+  <section class="hero"><div class="wrap hero__grid">
+    <div>
+      <div class="eyebrow">тренажёр для начинающих тестировщиков</div>
+      <h1>Учиться ломать <em>на живых стендах</em>, а не по конспекту</h1>
+      <p class="hero__lede">Восемь модулей: кривая форма регистрации, симулятор DevTools с настоящим Network, конструктор запросов к API, подмена cookie и правка JWT. В каждой задаче — стенд, вопросы и подробный разбор ответа.</p>
+      <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap">
+        ${next? `<button class="btn" id="contBtn">${doneCount? 'Продолжить':'Начать'} → ${next.title}</button>`
+               : `<button class="btn" id="contBtn" disabled>Все задачи пройдены</button>`}
+      </div>
+    </div>
+    <div class="hero__stats">
+      <div class="stat"><b>${TASKS.length}</b><span>задач</span></div>
+      <div class="stat"><b>${labCount}</b><span>стендов</span></div>
+      <div class="stat"><b>${doneCount}</b><span>пройдено</span></div>
+    </div>
+  </div></section>
+
+  <section class="section"><div class="wrap">
+    <div class="section__head"><h2>Модули</h2><span class="eyebrow">можно в любом порядке</span></div>
+    <div class="grid">
+      ${MODULES.map(m=>{
+        const s = modStats(m.id); const full = s.done===s.total;
+        return `<button class="mod ${full?'mod--done':''}" data-mod="${m.id}">
+          <div class="mod__top"><span class="mod__idx">${m.n}</span><h3>${m.title}</h3></div>
+          <p>${m.blurb}</p>
+          <div class="mod__foot">
+            <span class="bar"><i style="width:${s.total? s.done/s.total*100:0}%"></i></span>
+            <span class="mod__count">${s.done}/${s.total}</span>
+          </div>
+        </button>`;
+      }).join('')}
+    </div>
+  </div></section>`;
+  app.querySelectorAll('[data-mod]').forEach(b=> b.onclick = ()=>go('#/m/'+b.dataset.mod));
+  const cb = document.getElementById('contBtn');
+  if(cb && next) cb.onclick = ()=>go('#/t/'+next.id);
+  updateXp();
+}
+
+/* ============================== МОДУЛЬ ============================== */
+function viewModule(m){
+  const list = tasksOf(m.id); const s = modStats(m.id);
+  app.innerHTML = `
+  <div class="wrap">
+    <div class="crumbs"><button data-go="#/">модули</button><span>/</span><span class="mono">${m.n}</span></div>
+    <div class="eyebrow">модуль ${m.n} · ${s.done} из ${s.total} пройдено</div>
+    <h2 style="font-size:clamp(22px,5vw,30px); letter-spacing:-.02em; margin:6px 0 8px">${m.title}</h2>
+    <p class="prose" style="max-width:62ch">${m.blurb}</p>
+    <div class="tasklist">
+      ${list.map((t,i)=>{
+        const r = resOf(t.id); const cls = r? (r.ok?'trow--ok':(r.score>0?'trow--part':'')) : '';
+        const mark = r? (r.ok?'✓':'·') : (i+1);
+        return `<button class="trow ${cls}" data-t="${t.id}">
+          <span class="trow__st">${mark}</span>
+          <span class="trow__body">
+            <span class="trow__title">${t.title}</span>
+            <span class="trow__meta">${t.tag}${t.lab?' · стенд':''} · ${t.questions.length} вопрос${t.questions.length===1?'':(t.questions.length<5?'а':'ов')}${r&&!r.ok?' · набрано '+r.score+' из '+r.max:''}</span>
+          </span>
+          <span class="trow__arrow">→</span>
+        </button>`;
+      }).join('')}
+    </div>
+    ${s.done===s.total? `<div class="done-banner"><span style="font-size:22px">✓</span><div><b>Модуль пройден целиком.</b><br><span style="color:var(--ink-2)">Можно вернуться к любой задаче и перечитать разборы — они полезнее, чем баллы.</span></div></div>`:''}
+    <div style="height:40px"></div>
+  </div>`;
+  app.querySelectorAll('[data-t]').forEach(b=> b.onclick = ()=>go('#/t/'+b.dataset.t));
+  app.querySelectorAll('[data-go]').forEach(b=> b.onclick = ()=>go(b.dataset.go));
+  updateXp();
+}
+
+/* ============================== ЗАДАЧА ============================== */
+let RT = null;
+
+function viewTask(t){
+  const m = MODULES.find(x=>x.id===t.mod);
+  const list = tasksOf(t.mod);
+  const idx = list.indexOf(t);
+  const prev = list[idx-1], next = list[idx+1];
+  const saved = resOf(t.id);
+  RT = {task:t, ans:{}, checked:false, solved: !!(saved && saved.solved), lab:null};
+
+  app.innerHTML = `
+  <div class="wrap task">
+    <div class="crumbs">
+      <button data-go="#/">модули</button><span>/</span>
+      <button data-go="#/m/${m.id}">${m.title}</button><span>/</span>
+      <span class="mono">${idx+1} из ${list.length}</span>
+    </div>
+    <div class="task__head">
+      <div class="eyebrow">${m.n} · ${t.tag}</div>
+      <h2>${t.title}</h2>
+    </div>
+
+    <div class="card">
+      <div class="card__label"><b>Условие</b><hr></div>
+      <div class="prose">${t.brief}</div>
+    </div>
+
+    ${t.lab? `<div class="card">
+      <div class="card__label"><b>Стенд</b><hr></div>
+      <div id="labHost"></div>
+      ${t.goal? `<div class="goal" id="goalBox">
+        <span class="goal__ic">◎</span>
+        <div><b>цель на стенде</b><span id="goalTxt">${t.goal.text}</span>
+        ${t.goal.hint? `<div style="margin-top:6px"><button class="btn btn--quiet btn--sm" id="hintBtn">показать подсказку</button><div id="hintTxt" style="display:none; margin-top:6px; color:var(--muted); font-size:13.5px">${t.goal.hint}</div></div>`:''}
+        </div></div>`:''}
+    </div>`:''}
+
+    <div class="card">
+      <div class="card__label"><b>Вопросы</b><hr></div>
+      <div id="qHost">${t.questions.map((q,i)=>renderQ(q,i)).join('')}</div>
+    </div>
+
+    <div class="actions"><div class="actions__in">
+      <button class="btn" id="checkBtn">Проверить</button>
+      <span class="verdict" id="verdict"></span>
+      <span class="actions__spacer"></span>
+      ${prev? `<button class="btn btn--quiet btn--sm" data-go="#/t/${prev.id}">← назад</button>`:''}
+      ${next? `<button class="btn btn--ghost btn--sm" data-go="#/t/${next.id}">дальше →</button>`
+             : `<button class="btn btn--ghost btn--sm" data-go="#/m/${m.id}">к модулю</button>`}
+    </div></div>
+  </div>`;
+
+  app.querySelectorAll('[data-go]').forEach(b=> b.onclick = ()=>go(b.dataset.go));
+  const hb = document.getElementById('hintBtn');
+  if(hb) hb.onclick = ()=>{ const h=document.getElementById('hintTxt'); h.style.display='block'; hb.style.display='none'; };
+  wireQ();
+  if(t.lab) mountLab(document.getElementById('labHost'), t.lab, t);
+  if(RT.solved) markGoal();
+  document.getElementById('checkBtn').onclick = check;
+  updateXp();
+}
+
+/* ---------- вопросы ---------- */
+function renderQ(q,i){
+  const kind = q.k==='single' ? 'один вариант' : q.k==='multi' ? 'несколько вариантов' : 'сопоставление';
+  let body='';
+  if(q.k==='single'||q.k==='multi'){
+    body = `<div class="opts">${q.opts.map((o,j)=>`
+      <label class="opt" data-q="${i}" data-o="${j}">
+        <input type="${q.k==='single'?'radio':'checkbox'}" name="q${i}" value="${j}">
+        <span class="opt__txt">${o}</span>
+        <span class="opt__tag"></span>
+      </label>`).join('')}</div>`;
+  } else {
+    const pool = q.pairs.map(p=>p[1]).slice().sort((a,b)=>a.localeCompare(b,'ru'));
+    body = `<div class="match">${q.pairs.map((p,j)=>`
+      <div class="match__row" data-q="${i}" data-r="${j}">
+        <span class="match__key">${p[0]}</span>
+        <select data-q="${i}" data-r="${j}">
+          <option value="">— выбрать —</option>
+          ${pool.map(v=>`<option value="${v.replace(/"/g,'&quot;')}">${v.replace(/<[^>]+>/g,'')}</option>`).join('')}
+        </select>
+      </div>`).join('')}</div>`;
+  }
+  return `<div class="q" data-qi="${i}">
+    <div class="q__title">${i+1}. ${q.q}</div>
+    <div class="q__kind">${kind}</div>
+    ${body}
+    <div class="expl" id="expl${i}" style="display:none"></div>
+  </div>`;
+}
+function wireQ(){
+  app.querySelectorAll('.opt input').forEach(inp=>{
+    inp.addEventListener('change', ()=>{
+      const lab = inp.closest('.opt'); const qi = +lab.dataset.q;
+      if(inp.type==='radio') app.querySelectorAll(`.opt[data-q="${qi}"]`).forEach(l=>l.classList.remove('opt--sel'));
+      lab.classList.toggle('opt--sel', inp.checked);
+      clearMarks(qi);
+    });
+  });
+  app.querySelectorAll('.match select').forEach(sel=>{
+    sel.addEventListener('change', ()=> clearMarks(+sel.dataset.q));
+  });
+}
+function clearMarks(qi){
+  app.querySelectorAll(`.opt[data-q="${qi}"]`).forEach(l=>l.classList.remove('opt--right','opt--wrong','opt--miss'));
+  app.querySelectorAll(`.opt[data-q="${qi}"] .opt__tag`).forEach(s=>s.textContent='');
+  app.querySelectorAll(`.match__row[data-q="${qi}"]`).forEach(r=>r.classList.remove('is-right','is-wrong'));
+}
+function readQ(q,i){
+  if(q.k==='single'){
+    const sel = app.querySelector(`.opt[data-q="${i}"] input:checked`);
+    return sel? [+sel.value] : [];
+  }
+  if(q.k==='multi'){
+    return [...app.querySelectorAll(`.opt[data-q="${i}"] input:checked`)].map(x=>+x.value);
+  }
+  return [...app.querySelectorAll(`.match select[data-q="${i}"]`)].map(s=>s.value);
+}
+function gradeQ(q,i,ans){
+  if(q.k==='match'){
+    let allRight = true;
+    q.pairs.forEach((p,j)=>{
+      const row = app.querySelector(`.match__row[data-q="${i}"][data-r="${j}"]`);
+      const right = ans[j]===p[1];
+      row.classList.add(right?'is-right':'is-wrong');
+      if(!right) allRight=false;
+    });
+    return allRight;
+  }
+  const right = q.k==='single' ? [q.right] : q.right;
+  let allRight = ans.length>0;
+  q.opts.forEach((o,j)=>{
+    const lab = app.querySelector(`.opt[data-q="${i}"][data-o="${j}"]`);
+    const tag = lab.querySelector('.opt__tag');
+    const isRight = right.includes(j), picked = ans.includes(j);
+    if(picked && isRight){ lab.classList.add('opt--right'); tag.textContent='верно'; }
+    else if(picked && !isRight){ lab.classList.add('opt--wrong'); tag.textContent='лишнее'; allRight=false; }
+    else if(!picked && isRight){ lab.classList.add('opt--miss'); tag.textContent='пропущено'; allRight=false; }
+  });
+  return allRight;
+}
+function check(){
+  const t = RT.task;
+  let score = 0, unanswered = 0;
+  t.questions.forEach((q,i)=>{
+    clearMarks(i);
+    const ans = readQ(q,i);
+    const empty = q.k==='match' ? ans.some(v=>v==='') : ans.length===0;
+    if(empty) unanswered++;
+    const ok = gradeQ(q,i,ans);
+    if(ok) score++;
+    const ex = document.getElementById('expl'+i);
+    ex.style.display='block';
+    ex.innerHTML = `<b>${ok?'Верно.':'Разбор.'}</b> ${q.expl}`;
+  });
+  const max = maxOf(t);
+  if(t.goal && RT.solved) score++;
+  const ok = score===max;
+  const prevBest = resOf(t.id);
+  if(!prevBest || score>prevBest.score || ok){
+    ST.res[t.id] = {score:Math.max(score, prevBest?prevBest.score:0), max, ok: ok || !!(prevBest&&prevBest.ok), solved:RT.solved};
+  } else { ST.res[t.id].solved = RT.solved || ST.res[t.id].solved; }
+  save(); updateXp();
+  const v = document.getElementById('verdict');
+  v.className = 'verdict '+(ok?'verdict--ok':'verdict--no');
+  if(ok) v.textContent = `${score}/${max} — задача пройдена`;
+  else if(t.goal && !RT.solved) v.textContent = `${score}/${max} — цель на стенде ещё не выполнена`;
+  else if(unanswered) v.textContent = `${score}/${max} — есть вопросы без ответа`;
+  else v.textContent = `${score}/${max} — читай разборы и поправь ответы`;
+  if(ok) toast('Задача пройдена: '+score+'/'+max);
+  const first = app.querySelector('.opt--wrong,.opt--miss,.match__row.is-wrong');
+  if(first && !ok) first.scrollIntoView({block:'center', behavior:'smooth'});
+}
+function markGoal(){
+  const box = document.getElementById('goalBox'); if(!box) return;
+  box.classList.add('goal--done');
+  box.querySelector('.goal__ic').textContent = '✓';
+  const t = document.getElementById('goalTxt');
+  if(t) t.innerHTML = RT.task.goal.text + ' <b style="display:inline; color:var(--pass); letter-spacing:0; text-transform:none; font-size:13px">— выполнено</b>';
+}
+function solveGoal(msg){
+  if(RT.solved) return;
+  RT.solved = true;
+  const r = ST.res[RT.task.id] || {score:0,max:maxOf(RT.task),ok:false};
+  r.solved = true; ST.res[RT.task.id] = r; save();
+  markGoal(); toast(msg||'Цель на стенде выполнена');
+}
+
+/* ============================== СТЕНДЫ ============================== */
+function mountLab(host, cfg, t){
+  if(cfg.type==='form') return labForm(host);
+  if(cfg.type==='net')  return labNet(host, cfg);
+  if(cfg.type==='api')  return labApi(host, cfg);
+  if(cfg.type==='bank') return labBank(host, cfg);
+}
+const frame = (url, inner, dt) => `
+  <div class="sim">
+    <div class="sim__bar">
+      <span class="sim__dots"><i></i><i></i><i></i></span>
+      <span class="sim__url">${url}</span>
+    </div>
+    ${inner? `<div class="sim__body">${inner}</div>`:''}
+    ${dt||''}
+  </div>`;
+
+/* ---------- стенд: форма регистрации ---------- */
+function labForm(host){
+  host.innerHTML = frame('https://shop.test/signup', `
+    <form id="rgForm" novalidate autocomplete="off">
+      <div class="formgrid">
+        ${[['name','Имя','text'],['email','Email','text'],['phone','Телефон','text'],['age','Возраст','text'],
+           ['pass','Пароль','password'],['pass2','Повтор пароля','password']].map(([k,l,ty])=>`
+          <div class="field">
+            <label for="f_${k}">${l} ${k==='phone'?'':'<span class="req">*</span>'}</label>
+            <input type="${ty}" id="f_${k}">
+            <div class="field__err" id="e_${k}"></div>
+          </div>`).join('')}
+      </div>
+      <label class="opt" style="background:transparent; border-style:dashed">
+        <input type="checkbox" id="f_agree">
+        <span class="opt__txt">Принимаю условия обслуживания</span>
+      </label>
+      <div class="field__err" id="e_agree" style="margin:4px 0 10px"></div>
+      <button class="btn" type="submit">Создать аккаунт</button>
+    </form>
+    <div id="rgOut" style="margin-top:12px"></div>`);
+
+  const g = id => document.getElementById(id);
+  const vals = () => ({
+    name:g('f_name').value, email:g('f_email').value, phone:g('f_phone').value,
+    age:g('f_age').value, pass:g('f_pass').value, pass2:g('f_pass2').value, agree:g('f_agree').checked
+  });
+  /* валидация «как её написал разработчик» — с дефектами */
+  function buggy(v){
+    const e = {};
+    if(v.name.length === 0) e.name = 'Укажите имя';
+    if(!/^\S+@\S+$/.test(v.email)) e.email = 'Некорректный email';
+    if(v.age === '') e.age = 'Укажите возраст';
+    else if(isNaN(Number(v.age))) e.age = 'Возраст должен быть числом';
+    if(v.pass.length < 6) e.pass = 'Минимум 6 символов';
+    if(!v.agree) e.agree = 'Нужно принять условия';
+    return e;
+  }
+  /* что на самом деле требует ТЗ */
+  function spec(v){
+    const out = [];
+    const nm = v.name.trim();
+    if(nm.length < 2 || nm.length > 64) out.push('имя должно быть 2–64 символа и не из одних пробелов');
+    if(!/^[^\s@]+@[^\s@]+\.[A-Za-zА-Яа-я]{2,}$/.test(v.email)) out.push('email должен содержать домен и доменную зону');
+    if(v.phone.trim() !== ''){
+      const d = (v.phone.match(/\d/g)||[]).length;
+      if(!/^[\d+\s()-]+$/.test(v.phone) || d < 11 || d > 15) out.push('телефон: только цифры, +, пробелы и дефисы, 11–15 цифр');
+    }
+    if(!/^\d+$/.test(v.age.trim()) || +v.age < 18 || +v.age > 120) out.push('возраст: целое число от 18 до 120');
+    if(v.pass.length < 8) out.push('пароль минимум 8 символов');
+    if(v.pass !== v.pass2) out.push('пароль и повтор должны совпадать');
+    if(!v.agree) out.push('согласие с условиями обязательно');
+    return out;
+  }
+  g('rgForm').addEventListener('submit', ev=>{
+    ev.preventDefault();
+    const v = vals(), e = buggy(v), bad = spec(v);
+    ['name','email','phone','age','pass','pass2','agree'].forEach(k=> g('e_'+k).textContent = e[k]||'');
+    const out = g('rgOut');
+    if(Object.keys(e).length){
+      out.innerHTML = `<span class="chip chip--no">форма не отправлена</span>`;
+      return;
+    }
+    out.innerHTML = `
+      <div style="padding:12px 13px; border:1px solid var(--pass); background:var(--pass-soft); border-radius:10px">
+        <div style="font-weight:700; margin-bottom:4px">Аккаунт создан</div>
+        <div class="mono" style="font-size:12px; color:var(--ink-2)">POST /api/v1/users → 201 Created</div>
+        ${bad.length? `<div style="margin-top:9px; font-size:14px">
+            <span class="chip chip--warn">по ТЗ это нарушение</span>
+            <ul style="margin:8px 0 0; padding-left:20px; color:var(--ink-2)">${bad.map(x=>`<li>${x}</li>`).join('')}</ul>
+          </div>`
+          : `<div style="margin-top:8px; font-size:14px; color:var(--ink-2)">Данные соответствуют ТЗ — попробуй теперь нарушить какое-нибудь правило.</div>`}
+      </div>`;
+    if(bad.length) solveGoal('Форма приняла данные вне ТЗ — цель выполнена');
+  });
+}
+
+/* ---------- стенд: DevTools ---------- */
+function labNet(host, cfg){
+  const reqs = cfg.requests;
+  const span = Math.max(...reqs.map(r=>r.t0+r.t), 1);
+  const fmtT = ms => ms>=1000 ? (ms/1000).toFixed(2).replace('.',',')+' с' : ms+' мс';
+  const stCls = st => st===0? 'st--0' : 'st--'+String(st)[0];
+  let tab = cfg.tab||'network', sel = 0, dtab = 'headers';
+
+  host.innerHTML = frame(cfg.url, '', `
+    <div class="dt">
+      <div class="dt__tabs" role="tablist">
+        ${[['network','Network'],['console','Console'],['application','Application']].map(([k,l])=>
+          `<button class="dt__tab" role="tab" data-tab="${k}">${l}</button>`).join('')}
+      </div>
+      <div class="dt__pane" id="dtPane"></div>
+    </div>`);
+
+  function paneNetwork(){
+    const r = reqs[sel];
+    return `<div class="tblscroll"><table class="nettable">
+      <thead><tr><th>Запрос</th><th>Метод</th><th>Статус</th><th>Тип</th><th>Размер</th><th>Время</th><th style="min-width:110px">Waterfall</th></tr></thead>
+      <tbody>${reqs.map((q,i)=>`<tr data-row="${i}" class="${i===sel?'is-sel':''}">
+        <td class="u">${q.u}</td><td>${q.m}</td>
+        <td class="st ${stCls(q.st)}">${q.st===0?'(failed)':q.st}</td>
+        <td>${q.ty}</td><td>${q.size}</td><td>${fmtT(q.t)}</td>
+        <td><span class="wf"><i style="left:${q.t0/span*100}%; width:${Math.max(q.t/span*100,1.5)}%"></i></span></td>
+      </tr>`).join('')}</tbody></table></div>
+      <div class="detail">
+        <div class="detail__tabs">
+          ${[['headers','Headers'],['payload','Payload'],['response','Response'],['timing','Timing']].map(([k,l])=>
+            `<button class="dt__tab" data-dtab="${k}" ${dtab===k?'aria-selected="true"':''}>${l}</button>`).join('')}
+        </div>
+        <div class="detail__body">${detailBody(r)}</div>
+      </div>`;
+  }
+  function detailBody(r){
+    const hh = o => Object.keys(o||{}).length? Object.entries(o).map(([k,v])=>`  ${k}: ${v}`).join('\n') : '  —';
+    if(dtab==='headers') return `Общее\n  Метод: ${r.m}\n  Адрес: ${r.u}\n  Статус: ${r.st===0?'(заблокировано браузером)':r.st}\n\nЗаголовки запроса\n${hh(r.req)}\n\nЗаголовки ответа\n${hh(r.res)}`;
+    if(dtab==='payload') return r.payload? r.payload : '— тела запроса нет —';
+    if(dtab==='response') return r.body || '— тело ответа пустое —';
+    return r.timing? Object.entries(r.timing).map(([k,v])=>`  ${k}: ${v}`).join('\n')
+      : `  Всего: ${fmtT(r.t)}\n  (подробный тайминг для этого запроса не записан)`;
+  }
+  function paneConsole(){
+    return `<div class="console">${(cfg.console||[]).map(l=>
+      `<div class="console__l console__l--${l.lvl}"><span class="console__src">${l.src||''}</span>${l.txt}</div>`).join('')
+      || '<div class="console__l console__l--log">— консоль пуста —</div>'}</div>`;
+  }
+  function paneApp(){
+    const s = cfg.storage||{};
+    const ck = (s.cookies||[]).map(c=>`<tr>
+        <td>${c.n}</td><td>${c.v}</td><td>${c.d}</td><td>${c.p}</td>
+        <td>${c.ho?'✓':''}</td><td>${c.se?'✓':''}</td><td>${c.ss||''}</td><td>${c.ex||'session'}</td></tr>`).join('');
+    const kv = arr => (arr&&arr.length)? arr.map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('')
+                                       : '<tr><td colspan="2" style="color:var(--muted)">пусто</td></tr>';
+    return `<div class="storagegrid">
+      <div class="sgroup"><div class="sgroup__h">Cookies · ${cfg.url.replace(/^https?:\/\//,'').split('/')[0]}</div>
+        <div class="tblscroll"><table>
+          <tr><td style="color:var(--muted)">Name</td><td style="color:var(--muted)">Value</td><td style="color:var(--muted)">Domain</td><td style="color:var(--muted)">Path</td><td style="color:var(--muted)">HttpOnly</td><td style="color:var(--muted)">Secure</td><td style="color:var(--muted)">SameSite</td><td style="color:var(--muted)">Expires</td></tr>
+          ${ck}</table></div></div>
+      <div class="sgroup"><div class="sgroup__h">Local Storage</div><div class="tblscroll"><table>${kv(s.local)}</table></div></div>
+      <div class="sgroup"><div class="sgroup__h">Session Storage</div><div class="tblscroll"><table>${kv(s.session)}</table></div></div>
+    </div>`;
+  }
+  function draw(){
+    host.querySelectorAll('[data-tab]').forEach(b=> b.setAttribute('aria-selected', String(b.dataset.tab===tab)));
+    const pane = host.querySelector('#dtPane');
+    pane.innerHTML = tab==='network'? paneNetwork() : tab==='console'? paneConsole() : paneApp();
+    pane.querySelectorAll('[data-row]').forEach(tr=> tr.onclick = ()=>{ sel = +tr.dataset.row; draw(); });
+    pane.querySelectorAll('[data-dtab]').forEach(b=> b.onclick = ()=>{ dtab = b.dataset.dtab; draw(); });
+  }
+  host.querySelectorAll('[data-tab]').forEach(b=> b.onclick = ()=>{ tab = b.dataset.tab; draw(); });
+  draw();
+}
+
+/* ---------- стенд: конструктор запросов ---------- */
+const SERVERS = {
+  usersV1(rq){
+    const p = rq.path.split('?')[0].replace(/\/$/,'');
+    if(p !== '/api/v1/users') return {st:404, txt:'Not Found', body:{error:'not_found', path:p}};
+    if(rq.method==='GET') return {st:200, txt:'OK', body:{items:[{id:7,name:'Анна',email:'anna@mail.ru',age:30}], total:1}};
+    if(rq.method!=='POST') return {st:405, txt:'Method Not Allowed', hdr:{allow:'GET, POST'}, body:{error:'method_not_allowed'}};
+    let d;
+    try{ d = JSON.parse(rq.body||''); }
+    catch(e){ return {st:400, txt:'Bad Request', body:{error:'invalid_json', message:String(e.message)}}; }
+    if(d.email===undefined) return {st:500, txt:'Internal Server Error',
+      body:{error:'internal_error', message:'Cannot read property "toLowerCase" of undefined at UserService.create (users.js:41)', trace_id:'9c11-ab7f'}};
+    if(typeof d.age === 'string') return {st:500, txt:'Internal Server Error',
+      body:{error:'internal_error', message:'TypeError: age.toFixed is not a function at UserService.create (users.js:47)', trace_id:'9c11-ab80'}};
+    const violations = [];
+    if(!/^[^\s@]+@[^\s@]+\.[A-Za-zА-Яа-я]{2,}$/.test(String(d.email))) violations.push('email не является валидным адресом');
+    if(!(Number.isInteger(d.age) && d.age>=18 && d.age<=120)) violations.push('age вне диапазона 18–120 или не целое');
+    const nm = String(d.name===undefined?'':d.name).trim();
+    if(nm.length<2 || nm.length>64) violations.push('name вне 2–64 символов');
+    return {st:201, txt:'Created', hdr:{'location':'/api/v1/users/812'},
+      body:{id:812, name:d.name===undefined?null:d.name, email:d.email, age:d.age, created_at:'2026-08-25T11:04:12Z'},
+      meta:{bad:violations.length>0, violations}};
+  },
+  invoices(rq){
+    const DB = {
+      1041:{id:1041, tenant:3, company:'ИП Соколова А.',  amount:'18 400,00 ₽', status:'active',
+            contact:{name:'Анна Соколова', phone:'+7 900 000-00-01', inn:'770912345678'}},
+      1042:{id:1042, tenant:2, company:'ООО «Ромашка»',      amount:'1 240 000,00 ₽', status:'active',
+            contact:{name:'Павел Ерохин', phone:'+7 903 555-90-32', inn:'7712009988'}},
+      1043:{id:1043, tenant:7, company:'ООО «Северный ветер»', amount:'96 500,00 ₽', status:'paid',
+            contact:{name:'Игорь Сомов', phone:'+7 921 118-44-10', inn:'7801556677'}}
+    };
+    const ME = 3;
+    const p = rq.path.split('?')[0].replace(/\/$/,'');
+    const m = p.match(/^\/api\/v1\/invoices\/(\d+)$/);
+    if(p === '/api/v1/invoices'){
+      if(rq.method!=='GET') return {st:405, txt:'Method Not Allowed', body:{error:'method_not_allowed'}};
+      return {st:200, txt:'OK', body:{items:[DB[1041]], total:1}, meta:{}};
+    }
+    if(!m) return {st:404, txt:'Not Found', body:{error:'not_found', path:p}};
+    const inv = DB[+m[1]];
+    if(!inv) return {st:404, txt:'Not Found', body:{error:'not_found', id:+m[1]}};
+    const foreign = inv.tenant !== ME;
+    if(rq.method==='GET') return {st:200, txt:'OK', body:inv, meta:{foreign}};
+    if(rq.method==='PATCH'){
+      let d; try{ d = JSON.parse(rq.body||'{}'); }catch(e){ return {st:400, txt:'Bad Request', body:{error:'invalid_json'}}; }
+      return {st:200, txt:'OK', body:Object.assign({}, inv, d, {updated_at:'2026-08-25T11:08:20Z'}), meta:{foreign}};
+    }
+    return {st:405, txt:'Method Not Allowed', hdr:{allow:'GET, PATCH'}, body:{error:'method_not_allowed'}};
+  }
+};
+function labApi(host, cfg){
+  const methods = cfg.methods || ['GET','POST'];
+  host.innerHTML = `
+    <div class="rb">
+      <div class="rb__line">
+        <select id="rbM">${methods.map(m=>`<option ${m===cfg.method?'selected':''}>${m}</option>`).join('')}</select>
+        <input type="text" id="rbP" value="${cfg.path}" spellcheck="false">
+        <button class="btn btn--sm" id="rbSend">Отправить</button>
+      </div>
+      ${cfg.presets? `<div class="rb__line" style="gap:6px">
+        <span class="eyebrow" style="margin-right:2px">пресеты</span>
+        ${cfg.presets.map((p,i)=>`<button class="btn btn--quiet btn--sm" data-pre="${i}">${p.label}</button>`).join('')}
+      </div>`:''}
+      <div id="rbBodyWrap">
+        <div class="eyebrow" style="margin-bottom:5px">тело запроса · JSON</div>
+        <textarea id="rbB" rows="6" spellcheck="false">${cfg.body||''}</textarea>
+      </div>
+      <div class="rb__log" id="rbLog"></div>
+    </div>`;
+  const $ = id => document.getElementById(id);
+  const bodyless = m => m==='GET'||m==='DELETE'||m==='HEAD';
+  function syncBody(){ $('rbBodyWrap').style.display = bodyless($('rbM').value)? 'none':'block'; }
+  $('rbM').onchange = syncBody; syncBody();
+  (cfg.presets||[]).forEach((p,i)=>{
+    host.querySelector(`[data-pre="${i}"]`).onclick = ()=>{
+      if(p.method) $('rbM').value = p.method;
+      if(p.path) $('rbP').value = p.path;
+      if(p.body!==undefined) $('rbB').value = p.body;
+      syncBody(); toast('Пресет подставлен, жми «Отправить»');
+    };
+  });
+  $('rbSend').onclick = ()=>{
+    const rq = {method:$('rbM').value, path:$('rbP').value.trim(), body:bodyless($('rbM').value)? '' : $('rbB').value};
+    const r = SERVERS[cfg.server](rq);
+    const cls = r.st>=500? 'st--5' : r.st>=400? 'st--4' : r.st>=300? 'st--3':'st--2';
+    const hdr = Object.assign({'content-type':'application/json'}, r.hdr||{});
+    const el = document.createElement('div');
+    el.className = 'res';
+    el.innerHTML = `
+      <div class="res__h"><span class="m">${rq.method}</span><span class="p">${rq.path}</span>
+        <span class="st ${cls}">${r.st} ${r.txt}</span>
+        ${r.meta && r.meta.bad? '<span class="chip chip--no">принято вне контракта</span>':''}
+        ${r.meta && r.meta.foreign? '<span class="chip chip--no">чужая организация</span>':''}
+      </div>
+      <div class="res__b">${Object.entries(hdr).map(([k,v])=>k+': '+v).join('\n')}\n\n${JSON.stringify(r.body,null,2)}</div>`;
+    const log = $('rbLog'); log.insertBefore(el, log.firstChild);
+    if(cfg.server==='usersV1' && r.st===201 && r.meta && r.meta.bad)
+      solveGoal('Сервер создал пользователя вне контракта — цель выполнена');
+    if(cfg.server==='invoices' && r.st>=200 && r.st<300 && r.meta && r.meta.foreign)
+      solveGoal('Сервер отдал чужой счёт — цель выполнена');
+  };
+}
+
+/* ---------- стенд: банк (cookie / JWT) ---------- */
+const SESSIONS = {
+  s_anna_7f3c:{u:'anna', name:'Анна Соколова', acc:'40817 810 0000 0004417', bal:'128 400,00 ₽',
+    ops:[['24.08','Кофейня «Тчк»','−320,00 ₽'],['23.08','Перевод от И. Сомов','+12 000,00 ₽'],['22.08','Аренда','−45 000,00 ₽']]},
+  s_pavel_91ab:{u:'pavel', name:'Павел Ерохин', acc:'40817 810 0000 0009032', bal:'2 415 900,00 ₽',
+    ops:[['25.08','ООО «Ромашка», дивиденды','+1 200 000,00 ₽'],['24.08','Ювелирный «Карат»','−318 400,00 ₽'],['21.08','Перевод А. Соколовой','−12 000,00 ₽']]}
+};
+const b64u  = s => btoa(unescape(encodeURIComponent(s))).replace(/=+$/,'').replace(/\+/g,'-').replace(/\//g,'_');
+const ub64u = s => decodeURIComponent(escape(atob(String(s).replace(/-/g,'+').replace(/_/g,'/')))); 
+const mkTok = obj => b64u('{"alg":"HS256","typ":"JWT"}')+'.'+b64u(JSON.stringify(obj))+'.'+'c2lnbmF0dXJlLW9mLXNlcnZlcg';
+
+function labBank(host, cfg){
+  if(cfg.mode==='cookie'){
+    let cookie = 's_anna_7f3c', applied = 's_anna_7f3c';
+    host.innerHTML = `<div id="bkHost"></div>`;
+    const draw = ()=>{
+      const s = SESSIONS[applied];
+      const page = s? `
+        <div class="app">
+          <div class="app__top">
+            <div><div class="eyebrow">bank.test · личный кабинет</div>
+              <div style="font-family:var(--display); font-weight:700; font-size:18px; margin-top:3px">${s.name}</div></div>
+            <span class="chip chip--ok">200 OK</span>
+          </div>
+          <div><div class="eyebrow">доступно</div><div class="balance">${s.bal}</div></div>
+          <dl class="kv"><dt>счёт</dt><dd>${s.acc}</dd><dt>сессия</dt><dd>${applied}</dd></dl>
+          <div><div class="eyebrow" style="margin-bottom:5px">последние операции</div>
+            <dl class="kv">${s.ops.map(o=>`<dt>${o[0]}</dt><dd>${o[1]} <b>${o[2]}</b></dd>`).join('')}</dl></div>
+        </div>`
+      : `<div class="app">
+          <div class="app__top"><div class="eyebrow">bank.test · вход</div><span class="chip chip--no">401 Unauthorized</span></div>
+          <p style="color:var(--ink-2)">Сессия не найдена или истекла. Введите логин и пароль.</p>
+          <div class="field"><label>Логин</label><input type="text" disabled placeholder="логин"></div>
+          <div class="field"><label>Пароль</label><input type="password" disabled placeholder="пароль"></div>
+        </div>`;
+      document.getElementById('bkHost').innerHTML = frame('https://bank.test/account', page, `
+        <div class="dt">
+          <div class="dt__tabs"><button class="dt__tab" aria-selected="true">Application</button></div>
+          <div class="storagegrid">
+            <div class="sgroup"><div class="sgroup__h">Cookies · bank.test</div>
+              <div class="tblscroll"><table>
+                <tr><td style="color:var(--muted)">Name</td><td style="color:var(--muted)">Value</td><td style="color:var(--muted)">HttpOnly</td><td style="color:var(--muted)">Secure</td></tr>
+                <tr><td>session</td><td><input type="text" id="ckIn" value="${cookie}" spellcheck="false" style="font-family:var(--mono); font-size:12px; padding:4px 6px"></td><td></td><td></td></tr>
+                <tr><td>lang</td><td>ru</td><td></td><td></td></tr>
+              </table></div>
+              <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap">
+                <button class="btn btn--sm" id="ckReload">Обновить страницу</button>
+                <button class="btn btn--quiet btn--sm" id="ckMine">вернуть свою сессию</button>
+              </div>
+              <div class="mono" style="font-size:11.5px; color:var(--muted); margin-top:8px">известные значения на стенде: s_anna_7f3c · s_pavel_91ab</div>
+            </div>
+          </div>
+        </div>`);
+      const inp = document.getElementById('ckIn');
+      inp.oninput = ()=> cookie = inp.value.trim();
+      document.getElementById('ckReload').onclick = ()=>{
+        applied = cookie; draw();
+        if(SESSIONS[applied] && SESSIONS[applied].u==='pavel') solveGoal('Ты в кабинете Павла — цель выполнена');
+      };
+      document.getElementById('ckMine').onclick = ()=>{ cookie='s_anna_7f3c'; applied='s_anna_7f3c'; draw(); };
+    };
+    draw();
+    return;
+  }
+
+  /* режим JWT */
+  const initPayload = {sub:'anna', name:'Анна Соколова', role:'user', tenant:3, exp:1795000000};
+  let token = mkTok(initPayload), applied = token;
+  host.innerHTML = `<div id="bkHost"></div>`;
+  const parse = tok => { try{ return JSON.parse(ub64u(String(tok).split('.')[1])); }catch(e){ return null; } };
+  const draw = ()=>{
+    const pl = parse(applied);
+    const admin = pl && pl.role === 'admin';
+    const page = !pl ? `
+      <div class="app"><div class="app__top"><div class="eyebrow">bank.test · вход</div><span class="chip chip--no">401 Unauthorized</span></div>
+      <p style="color:var(--ink-2)">Токен не читается. Требуется повторный вход.</p></div>`
+    : admin ? `
+      <div class="app">
+        <div class="app__top"><div><div class="eyebrow">bank.test · раздел администратора</div>
+          <div style="font-family:var(--display); font-weight:700; font-size:18px; margin-top:3px">Все клиенты банка</div></div>
+          <span class="chip chip--no">роль admin</span></div>
+        <div class="tblscroll"><table class="nettable">
+          <thead><tr><th>клиент</th><th>счёт</th><th>остаток</th><th>телефон</th></tr></thead>
+          <tbody>
+            <tr><td>Анна Соколова</td><td>…4417</td><td>128 400,00 ₽</td><td>+7 900 000-00-01</td></tr>
+            <tr><td>Павел Ерохин</td><td>…9032</td><td>2 415 900,00 ₽</td><td>+7 903 555-90-32</td></tr>
+            <tr><td>Игорь Сомов</td><td>…1188</td><td>96 500,00 ₽</td><td>+7 921 118-44-10</td></tr>
+          </tbody></table></div>
+        <div style="font-size:14px; color:var(--ink-2)">Доступны выгрузка в XLSX, изменение лимитов и блокировка счетов.</div>
+      </div>`
+    : `<div class="app">
+        <div class="app__top"><div><div class="eyebrow">bank.test · личный кабинет</div>
+          <div style="font-family:var(--display); font-weight:700; font-size:18px; margin-top:3px">${pl.name||pl.sub}</div></div>
+          <span class="chip">роль ${pl.role}</span></div>
+        <div><div class="eyebrow">доступно</div><div class="balance">128 400,00 ₽</div></div>
+        <div style="font-size:14px; color:var(--ink-2)">Раздел администратора скрыт: роль не подходит.</div>
+      </div>`;
+    const cur = parse(token);
+    document.getElementById('bkHost').innerHTML = frame('https://bank.test/', page, `
+      <div class="dt">
+        <div class="dt__tabs"><button class="dt__tab" aria-selected="true">Application</button></div>
+        <div class="storagegrid">
+          <div class="sgroup"><div class="sgroup__h">Local Storage · auth_token</div>
+            <textarea id="jwIn" rows="3" spellcheck="false">${token}</textarea>
+          </div>
+          <div class="sgroup"><div class="sgroup__h">Данные токена (вторая часть, base64)</div>
+            <textarea id="jwPl" rows="7" spellcheck="false">${cur? JSON.stringify(cur,null,2) : '— не удалось разобрать токен —'}</textarea>
+            <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap">
+              <button class="btn btn--ghost btn--sm" id="jwBuild">Собрать токен</button>
+              <button class="btn btn--sm" id="jwReload">Обновить страницу</button>
+              <button class="btn btn--quiet btn--sm" id="jwReset">вернуть исходный</button>
+            </div>
+            <div class="mono" style="font-size:11.5px; color:var(--muted); margin-top:8px">подпись сервером не проверяется — это и есть предмет проверки</div>
+          </div>
+        </div>
+      </div>`);
+    const jwIn = document.getElementById('jwIn');
+    jwIn.oninput = ()=> token = jwIn.value.trim();
+    document.getElementById('jwBuild').onclick = ()=>{
+      try{
+        const obj = JSON.parse(document.getElementById('jwPl').value);
+        token = mkTok(obj); jwIn.value = token; toast('Токен собран, теперь обнови страницу');
+      }catch(e){ toast('В данных токена невалидный JSON'); }
+    };
+    document.getElementById('jwReload').onclick = ()=>{
+      applied = token; draw();
+      const p = parse(applied);
+      if(p && p.role==='admin') solveGoal('Открыт раздел администратора — цель выполнена');
+    };
+    document.getElementById('jwReset').onclick = ()=>{ token = mkTok(initPayload); applied = token; draw(); };
+  };
+  draw();
+}
+
+/* ============================== СТАРТ ============================== */
+updateXp();
+render();
+</script>
