@@ -356,6 +356,22 @@ textarea{font-family:var(--mono); font-size:13px; line-height:1.6; resize:vertic
 .done-banner b{font-family:var(--display)}
 footer{border-top:1px solid var(--line); padding:22px 0 40px; color:var(--muted); font-size:13.5px}
 .legend{display:flex; gap:14px; flex-wrap:wrap; font-family:var(--mono); font-size:11.5px; color:var(--muted)}
+.wire{font-family:var(--mono); font-size:12px; line-height:1.7; background:var(--sunk);
+  border:1px solid var(--line); border-radius:10px; padding:10px 12px; white-space:pre-wrap;
+  word-break:break-word; color:var(--ink-2); overflow-x:auto}
+.wire b{color:var(--ink)}
+.wire .dec{color:var(--amber)}
+.schema{display:none}
+.msgs{display:flex; flex-direction:column; gap:6px; max-height:280px; overflow-y:auto; padding:3px;
+  border:1px solid var(--line); border-radius:10px; background:var(--sunk); min-height:60px}
+.msg{font-family:var(--mono); font-size:12px; padding:7px 10px; border-radius:9px;
+  border:1px solid var(--line); background:var(--card); max-width:90%; word-break:break-word}
+.msg--out{align-self:flex-end; background:var(--accent-soft); border-color:var(--accent)}
+.msg--in{align-self:flex-start; background:var(--card-2)}
+.msg--sys{align-self:stretch; background:transparent; border-style:dashed; color:var(--muted); max-width:100%}
+.msg--err{align-self:stretch; border-color:var(--fail); color:var(--fail); background:var(--fail-soft); max-width:100%}
+.msg__t{color:var(--muted); font-size:10.5px; margin-right:7px}
+.statusline{display:flex; align-items:center; gap:9px; flex-wrap:wrap}
 @media (max-width:760px){
   .hero__grid{grid-template-columns:1fr; gap:20px; align-items:start}
   .split{grid-template-columns:1fr}
@@ -412,7 +428,9 @@ const MODULES = [
   {id:'dt',    n:'05', title:'DevTools',                 blurb:'Network, Console, Application: читать запросы, куки и падения.'},
   {id:'loc',   n:'06', title:'Локализация багов',        blurb:'Фронт, бэк, данные или окружение — сузить до слоя за 3 шага.'},
   {id:'td',    n:'07', title:'Тест-дизайн',              blurb:'Классы эквивалентности, границы, набор кейсов без дыр.'},
-  {id:'sec',   n:'08', title:'Защита данных',            blurb:'От авторизации до аудита: подменить cookie, подкрутить JWT, влезть в чужой счёт.'}
+  {id:'sec',   n:'08', title:'Защита данных',            blurb:'От авторизации до аудита: подменить cookie, подкрутить JWT, влезть в чужой счёт.'},
+  {id:'auth',  n:'09', title:'Авторизация: способы',       blurb:'Basic, cookie-сессия, Bearer с refresh, API-key — попробовать каждый и увидеть, что уходит в заголовках.'},
+  {id:'proto', n:'10', title:'REST, GraphQL, gRPC, WS',    blurb:'Четыре способа поговорить с сервером: сделать запрос каждым и понять, когда какой уместен.'}
 ];
 
 /* ============================== ЗАДАЧИ ============================== */
@@ -1503,6 +1521,252 @@ questions:[
   expl:`Правило отбора: в журнал идёт то, что <b>меняет права, деньги или доступ к персональным данным</b> — и все отказы. Логировать каждый клик бессмысленно: важные события утонут в шуме, а сам журнал станет хранилищем персональных данных. И последнее требование, которое почти никогда не проверяют: <b>журнал должен быть неизменяемым</b> — если пользователь (или администратор) может отредактировать записи, аудита фактически нет.`}
 ]});
 
+/* ---------- 09. Авторизация: способы и потоки ---------- */
+T({id:'a1', mod:'auth', title:'Basic: пароль в каждом запросе', tag:'стенд',
+brief:`<p>Самый простой способ аутентификации: клиент прикладывает к <strong>каждому</strong> запросу заголовок</p>
+<pre class="codeblock">Authorization: Basic &lt;base64(логин:пароль)&gt;</pre>
+<p>Учётка на стенде: <code>anna</code> / <code>hunter2</code>. Выбери способ «Basic», отправь <code>GET /api/v1/me</code> и посмотри на панель «что уходит на сервер» — там же видно расшифровку.</p>`,
+lab:{type:'auth', methods:['none','basic']},
+goal:{text:'Получить <code>200</code> на <code>GET /api/v1/me</code> через Basic', hint:'Сначала отправь запрос вообще без авторизации — посмотри на <code>401</code> и заголовок <code>WWW-Authenticate</code>. Потом переключи способ на Basic.'},
+questions:[
+ {k:'multi', q:'Что видно из панели «что уходит на сервер»?',
+  opts:[
+   'base64 — это кодирование, а не шифрование: логин и пароль читаются в одну строку',
+   'Пароль уходит в каждом запросе, а не один раз при входе',
+   'Без HTTPS такой заголовок перехватывается целиком',
+   'У Basic нет выхода из системы: сервер не хранит состояние, «разлогинить» нечего',
+   'base64 защищает пароль от перехвата'
+  ],
+  right:[0,1,2,3],
+  expl:`Отсюда все практические выводы: Basic допустим только по HTTPS и обычно для служебных интеграций, а не для пользователей. И раз пароль летит с каждым запросом, <b>любой лог, прокси или трассировка, куда попадают заголовки, становится утечкой пароля</b> — это отдельный кейс: посмотреть, не пишутся ли заголовки в логи.`},
+ {k:'single', q:'Ответ <code>401</code> без авторизации содержал заголовок <code>WWW-Authenticate: Basic realm="api"</code>. Зачем он?',
+  opts:[
+   'Это подсказка клиенту, каким способом аутентифицироваться; браузер по нему показывает стандартное окно ввода логина и пароля',
+   'Это защита от перебора',
+   'Это обязательный заголовок любого ответа <code>401</code> в REST API',
+   'Он ни на что не влияет'
+  ],
+  right:0,
+  expl:`Сервер сообщает <i>как</i> с ним аутентифицироваться. Практическая деталь для тестировщика: из-за этого заголовка браузер сам открывает окно ввода — и если ваш API отдаёт <code>WWW-Authenticate: Basic</code> на обычные запросы фронта, пользователь внезапно увидит системный попап вместо экрана логина. Для API с токенами этот заголовок обычно не нужен.`}
+]});
+
+T({id:'a2', mod:'auth', title:'Cookie-сессия: состояние на сервере', tag:'стенд',
+brief:`<p>Классика веба: клиент один раз отправляет логин и пароль, сервер создаёт сессию у себя и возвращает её идентификатор в <code>Set-Cookie</code>. Дальше браузер сам прикладывает cookie к каждому запросу.</p>
+<p>Выбери способ «Cookie-сессия», нажми <code>POST /login</code>, потом <code>GET /api/v1/me</code>.</p>`,
+lab:{type:'auth', methods:['none','session']},
+goal:{text:'Войти через <code>POST /login</code> и получить <code>200</code> на <code>/api/v1/me</code> уже без пароля', hint:'Сначала <code>POST /login</code> — в ответе будет <code>Set-Cookie</code>. Затем <code>GET /api/v1/me</code>: пароль больше не нужен.'},
+questions:[
+ {k:'multi', q:'Чем сессия отличается от Basic?',
+  opts:[
+   'Пароль уходит один раз — при входе, а не с каждым запросом',
+   'Состояние хранится на сервере: сессию можно завершить принудительно (выход, смена пароля, блокировка)',
+   'Браузер прикладывает cookie автоматически — отсюда риск CSRF, который закрывают <code>SameSite</code> и CSRF-токеном',
+   'Серверу нужно где-то держать сессии: при нескольких инстансах — общее хранилище (Redis) или закрепление пользователя за инстансом',
+   'Сессия работает без cookie, если отключить их в браузере'
+  ],
+  right:[0,1,2,3],
+  expl:`Главный практический плюс — <b>отзываемость</b>: администратор нажал «заблокировать» и доступ пропал сразу. Главный минус — состояние. Отсюда два кейса, которые ломаются чаще всего: <b>выход</b> (сессия должна умирать на сервере, а не только в браузере) и <b>работа при нескольких инстансах</b> — если общего хранилища нет, пользователя случайно разлогинивает при каждом попадании на другой сервер.`},
+ {k:'single', q:'Что проверить сразу после успешного входа?',
+  opts:[
+   'Что в <code>Set-Cookie</code> стоят <code>HttpOnly</code>, <code>Secure</code> и <code>SameSite</code>, а срок жизни разумный',
+   'Что cookie короткая и легко читается',
+   'Что идентификатор сессии совпадает с логином пользователя',
+   'Что cookie видна в JavaScript через <code>document.cookie</code>'
+  ],
+  right:0,
+  expl:`Первое, куда смотрят в ответе на вход — <b>флаги cookie</b>. Третий и четвёртый варианты — прямые дефекты: предсказуемый идентификатор перебирается, а доступная из JS сессия угоняется любой XSS. Ровно это ты делала руками в модуле 08.`}
+]});
+
+T({id:'a3', mod:'auth', title:'Bearer-токен и обмен refresh', tag:'стенд',
+brief:`<p>Способ для API и мобильных клиентов: сервер выдаёт <strong>два</strong> токена — короткоживущий <code>access</code> (минуты) и долгий <code>refresh</code> (дни). Access прикладывают к запросам, refresh обменивают на новый access, когда тот истёк.</p>
+<p>Сценарий: войди, убедись, что <code>/me</code> работает, нажми «прошло 15 минут» и восстанови доступ <strong>не вводя пароль</strong>.</p>`,
+lab:{type:'auth', methods:['none','token'], clock:true},
+goal:{text:'После истечения access получить <code>200</code> на <code>/api/v1/me</code>, обменяв refresh', hint:'<code>POST /login</code> → <code>GET /api/v1/me</code> (200) → «прошло 15 минут» → <code>GET /api/v1/me</code> (401 token_expired) → <code>POST /api/v1/refresh</code> → снова <code>GET /api/v1/me</code>.'},
+questions:[
+ {k:'single', q:'Зачем два токена вместо одного долгого?',
+  opts:[
+   'Чтобы запросов было больше',
+   'Украденный access живёт минуты, а refresh отправляется редко и только на один эндпоинт — окно для злоупотребления резко меньше',
+   'Чтобы можно было работать без HTTPS',
+   'Так требует спецификация JWT'
+  ],
+  right:1,
+  expl:`Компромисс между «токен без состояния — сервер не может его отозвать» и «доступ нельзя терять на месяц». Access делают коротким и не проверяют в базе, refresh — долгим, но <b>хранят на сервере и умеют отзывать</b>. Отсюда набор кейсов: выход инвалидирует refresh, смена пароля инвалидирует все refresh, повторное использование одного refresh отклоняется.`},
+ {k:'multi', q:'Что обязательно проверить в этой схеме?',
+  opts:[
+   'Что истёкший access даёт <code>401</code> с машиночитаемым признаком (<code>token_expired</code>), а не общий текст',
+   'Что после выхода refresh больше не обменивается',
+   'Что refresh нельзя использовать как access (и наоборот)',
+   'Что фронт обновляет токен сам и не разлогинивает пользователя посреди работы',
+   'Что при одновременных запросах после истечения не улетают десять параллельных refresh',
+   'Что оба токена лежат в <code>localStorage</code>'
+  ],
+  right:[0,1,2,3,4],
+  expl:`Первый пункт — не придирка: фронт по этому признаку решает, обновлять токен или вести на логин, а на общем «unauthorized» он выбрасывает пользователя. Пятый — реальный баг живых приложений: пять запросов получили 401 одновременно и запустили пять обменов, часть из них падает. Последний вариант — наоборот, дефект: <code>localStorage</code> доступен любому JS, refresh безопаснее держать в <code>HttpOnly</code>-cookie.`}
+]});
+
+T({id:'a4', mod:'auth', title:'Какой способ где уместен', tag:'теория',
+brief:`<p>Четыре способа из стенда плюс API-key. Выбор определяется не модой, а тем, <em>кто</em> клиент и <em>можно ли</em> отозвать доступ.</p>`,
+questions:[
+ {k:'match', q:'Способ → где он на месте',
+  pairs:[
+   ['Basic','Служебная интеграция или внутренний инструмент строго по HTTPS'],
+   ['Cookie-сессия','Обычное веб-приложение в браузере, где нужен быстрый отзыв доступа'],
+   ['Bearer с refresh','Мобильное приложение и публичное API, где клиент не браузер'],
+   ['API-key','Сервер-сервер: ключ выдан системе, а не человеку'],
+   ['OAuth 2.0 / OIDC','Вход через сторонний провайдер: пароль пользователя нам не показывают']
+  ],
+  expl:`Ключевое различие последних двух: <b>API-key идентифицирует систему, а не человека</b> — в журнале аудита от него не будет пользователя, и права у него обычно широкие. Отсюда кейсы: ключ можно отозвать, у ключа ограничена область действия, ключ не даёт делать то, что должно требовать участия человека.`},
+ {k:'single', q:'Одностраничное приложение в браузере. Куда безопаснее положить токен?',
+  opts:[
+   'В <code>localStorage</code> — удобно и просто читать',
+   'В <code>HttpOnly</code>-cookie: JS её не прочитает, значит XSS не унесёт токен; CSRF закрывается <code>SameSite</code> и CSRF-токеном',
+   'В URL, чтобы работали ссылки',
+   'В <code>sessionStorage</code> — он безопаснее <code>localStorage</code>'
+  ],
+  right:1,
+  expl:`<code>sessionStorage</code> отличается от <code>localStorage</code> только сроком жизни, а не защитой: JS читает оба. Токен в URL утекает в <code>Referer</code>, в логи прокси и в историю браузера. Правило: <b>то, что нельзя показывать JS, храним там, куда JS не достаёт</b> — см. модуль 08.`}
+]});
+
+/* ---------- 10. REST, GraphQL, gRPC, WebSocket ---------- */
+T({id:'p1', mod:'proto', title:'GraphQL: сама выбираешь поля', tag:'стенд',
+brief:`<p>В REST форма ответа задана сервером: что вернули, то и разбираешь. В GraphQL клиент присылает <strong>запрос-выборку</strong> и получает ровно те поля, которые попросил.</p>
+<p>На стенде живой разбор запроса. Схема раскрывается кнопкой. Попробуй запросить только имя и email — без лишних полей.</p>`,
+lab:{type:'gql', query:'query {\n  user(id: 7) {\n    id\n    name\n    email\n    orders {\n      id\n      total\n    }\n  }\n}'},
+goal:{text:'Получить ответ, в котором у <code>user</code> только <code>name</code> и <code>email</code>', hint:'Оставь внутри <code>user(id: 7) { … }</code> ровно две строки: <code>name</code> и <code>email</code>.'},
+questions:[
+ {k:'multi', q:'Что даёт такой подход?',
+  opts:[
+   'Клиент не тащит лишние поля — это заметно на мобильной сети',
+   'Связанные данные приходят одним запросом вместо нескольких походов к серверу',
+   'Разные клиенты (веб, мобилка, партнёр) берут из одной схемы разные наборы полей',
+   'Схема — это контракт: по ней видно, какие поля и типы вообще существуют',
+   'Ответы автоматически кэшируются браузером так же, как в REST'
+  ],
+  right:[0,1,2,3],
+  expl:`Первые четыре пункта — то, за чем GraphQL и берут. А вот кэширование теряется: запросы обычно уходят <code>POST</code> на один и тот же адрес <code>/graphql</code>, поэтому <b>обычный HTTP-кэш и CDN по URL не работают</b> — кэш переносится в клиент (Apollo, urql) или в сервер. Для тестировщика это значит: проверки «второй раз данные берутся из кэша» тут про клиентский кэш, а не про заголовки ответа.`}
+]});
+
+T({id:'p2', mod:'proto', title:'GraphQL: 200 OK, а внутри ошибка', tag:'стенд',
+brief:`<p>Самая важная особенность GraphQL для тестировщика: <strong>ошибки приезжают с кодом <code>200</code></strong>. Сломанный запрос, отсутствие прав, упавший резолвер — HTTP-статус всё равно успешный, а причина лежит в теле, в массиве <code>errors</code>.</p>
+<p>Попробуй два запроса: запроси у <code>user</code> несуществующее поле <code>phone</code>, а потом — <code>orders</code> с выключенным флажком «отправлять токен».</p>`,
+lab:{type:'gql', query:'query {\n  user(id: 7) {\n    name\n    phone\n  }\n}', auth:false},
+goal:{text:'Получить ответ со статусом <code>200</code>, в котором непустой массив <code>errors</code>', hint:'Поле <code>phone</code> в схеме отсутствует — этого достаточно. В схеме есть <code>phoneMasked</code>.'},
+questions:[
+ {k:'multi', q:'Что показали два запроса?',
+  opts:[
+   'Ошибка в запросе (несуществующее поле) — это ошибка валидации по схеме: <code>data</code> нет вовсе, только <code>errors</code>',
+   'Отказ в правах на <code>orders</code> даёт частичный ответ: <code>data</code> есть, внутри <code>orders: null</code>, а причина — в <code>errors</code> с путём до поля',
+   'HTTP-статус в обоих случаях <code>200</code>',
+   'Мониторинг, который считает только 5xx, таких ошибок вообще не увидит',
+   'Автотест, проверяющий только <code>status == 200</code>, пройдёт на сломанном ответе',
+   'Такие ошибки видны по коду ответа в Network — достаточно смотреть на статус'
+  ],
+  right:[0,1,2,3,4],
+  expl:`Последний вариант — ровно наоборот, и это ловушка: по статусу тут не видно ничего, он всегда <code>200</code>. Практические следствия: <b>в каждом кейсе на GraphQL проверяем тело, а не код</b>; в автотестах обязательна проверка <code>errors</code> на пустоту; в тикете указываем <code>extensions.code</code> и <code>path</code>. И отдельный вопрос к команде: считает ли мониторинг ошибки GraphQL, или на дашбордах «всё зелено», пока пользователи видят пустые экраны.`},
+ {k:'single', q:'Частичный ответ: <code>data.user.name</code> заполнен, <code>data.user.orders = null</code>, в <code>errors</code> — <code>FORBIDDEN</code>. Что должен показать интерфейс?',
+  opts:[
+   'Пустой экран целиком',
+   'Имя показать, вместо списка заказов — понятное сообщение о недоступности; ошибку не проглатывать молча',
+   'Общее «что-то пошло не так» вместо всей страницы',
+   'Считать <code>orders: null</code> пустым списком и нарисовать «заказов нет»'
+  ],
+  right:1,
+  expl:`Последний вариант — самый коварный баг: <b>«нет прав» превращается в «нет данных»</b>, и пользователь уверен, что заказов не существует. Частичный ответ — это нормальное состояние GraphQL, и для каждого экрана надо решить, что показывать, когда часть данных не приехала.`}
+]});
+
+T({id:'p3', mod:'proto', title:'gRPC: вызов метода из .proto', tag:'стенд',
+brief:`<p>gRPC — это не «ещё один REST». Контракт задан файлом <code>.proto</code>, тело сообщений бинарное (protobuf), а вместо HTTP-кодов свои статусы: <code>0 OK</code>, <code>3 INVALID_ARGUMENT</code>, <code>5 NOT_FOUND</code>, <code>7 PERMISSION_DENIED</code>, <code>12 UNIMPLEMENTED</code>, <code>14 UNAVAILABLE</code>, <code>16 UNAUTHENTICATED</code>.</p>
+<p>Вызови методы с разными аргументами и метаданными. Схема — по кнопке.</p>`,
+lab:{type:'grpc'},
+goal:{text:'Получить два разных кода ошибки: <code>3 INVALID_ARGUMENT</code> и <code>16 UNAUTHENTICATED</code>', hint:'Сними флажок с метаданных <code>authorization</code> — будет 16. Верни его и убери из сообщения поле <code>account_id</code> — будет 3.'},
+questions:[
+ {k:'multi', q:'Что из этого — практические следствия для тестирования gRPC?',
+  opts:[
+   'Тело запроса и ответа бинарное: во вкладке Network браузера его не прочитать глазами',
+   'Источник правды по контракту — файл <code>.proto</code>, а не документация в вики',
+   'Из браузера напрямую вызвать нельзя: нужен grpc-web и прокси, поэтому фронт часто общается по REST, а gRPC живёт между сервисами',
+   'Инструменты для ручных вызовов другие: grpcurl, Postman с загруженным <code>.proto</code>, reflection',
+   'Отсутствие поля в сообщении и поле со значением по умолчанию — в protobuf это может быть неразличимо, и это источник дефектов',
+   'Коды gRPC совпадают с кодами HTTP'
+  ],
+  right:[0,1,2,3,4],
+  expl:`Пятый пункт — тонкий и дорогой: в protobuf 3 у скалярных полей нет «отсутствия», <code>0</code>, <code>false</code> и <code>""</code> выглядят как незаполненное. Отсюда та же беда, что с PATCH: «не менять» и «сбросить в ноль» неотличимы, если контракт не использует <code>optional</code> или wrapper-типы. Кейс: отправить <code>amount = 0</code> и проверить, что произошло — игнор или запись нуля.`},
+ {k:'match', q:'Код gRPC → ближайший смысл',
+  pairs:[
+   ['0','Успех'],
+   ['3','Аргументы не проходят проверку — аналог 400'],
+   ['5','Объект не найден — аналог 404'],
+   ['7','Прав недостаточно — аналог 403'],
+   ['16','Не аутентифицирован — аналог 401'],
+   ['12','Метод не реализован — аналог 501'],
+   ['14','Сервис недоступен — аналог 503, обычно можно повторить']
+  ],
+  expl:`Держи это соответствие под рукой: оно нужно, когда одно и то же действие идёт через шлюз (REST снаружи, gRPC внутри) и надо понять, кто превратил <code>7</code> в <code>500</code>. Отдельно про <code>14 UNAVAILABLE</code> — единственный код из списка, на который клиенту штатно положено делать повтор с задержкой; проверка «а есть ли ретрай» относится именно к нему.`}
+]});
+
+T({id:'p4', mod:'proto', title:'WebSocket: соединение вместо запросов', tag:'стенд',
+brief:`<p>HTTP-запрос — это «спросил и получил». WebSocket — постоянное двустороннее соединение: сервер шлёт сообщения сам, без запроса.</p>
+<p>Начинается всё с обычного HTTP-запроса с заголовком <code>Upgrade</code>, на который сервер отвечает <code>101 Switching Protocols</code>. Подключись, отправь сообщение, посмотри на поток.</p>`,
+lab:{type:'ws'},
+goal:{text:'Подключиться и получить ответ сервера на своё сообщение', hint:'«Подключиться» → напиши что-нибудь в поле → «Отправить». Ответ придёт как отдельное входящее сообщение.'},
+questions:[
+ {k:'multi', q:'Что верно про этот обмен?',
+  opts:[
+   'Соединение открывается один раз: <code>101 Switching Protocols</code> — и дальше по нему идут сообщения в обе стороны',
+   'Сервер отправляет данные сам, клиенту не нужно опрашивать его по таймеру',
+   'В DevTools это один «запрос» с вкладкой Messages, а не отдельная строка на каждое сообщение',
+   'У сообщений нет HTTP-статусов: успех и ошибку приложение описывает само внутри сообщения',
+   'Каждое сообщение — это отдельный HTTP-запрос'
+  ],
+  right:[0,1,2,3],
+  expl:`Четвёртый пункт меняет способ тестирования: <b>привычных кодов ответа тут нет</b>, и «ошибка» — это просто сообщение вида <code>{"type":"error","code":"…"}</code>, придуманное командой. Значит в тест-кейсах нужно опираться на контракт сообщений, а в баг-репорт прикладывать выгрузку из вкладки Messages, а не «статус запроса».`}
+]});
+
+T({id:'p5', mod:'proto', title:'WebSocket: обрыв и потерянные сообщения', tag:'стенд',
+brief:`<p>Реалтайм ломается не на счастливом пути, а на сети. Нажми «Обрыв сети» и попробуй отправить сообщение при закрытом соединении.</p>`,
+lab:{type:'ws', drop:true},
+goal:{text:'Воспроизвести потерю: отправить сообщение после обрыва соединения', hint:'«Подключиться» → «Обрыв сети» → напиши сообщение и нажми «Отправить».'},
+questions:[
+ {k:'multi', q:'Что проверять в приложении с WebSocket?',
+  opts:[
+   'Переподключение после обрыва — автоматическое, с растущей задержкой, а не в цикле без паузы',
+   'Что происходит с сообщениями, отправленными при закрытом соединении: очередь или молчаливая потеря',
+   'Есть ли heartbeat (ping/pong) — иначе прокси тихо рвут «простаивающее» соединение',
+   'Не потерялись ли события, пришедшие во время обрыва: есть ли добор пропущенного после реконнекта',
+   'Дубликаты и порядок сообщений после переподключения',
+   'Авторизация при подключении и то, что после выхода соединение закрывается',
+   'Что интерфейс показывает состояние связи, а не молча замирает',
+   'Что соединение переживает перезагрузку страницы'
+  ],
+  right:[0,1,2,3,4,5,6],
+  expl:`Последний вариант невозможен: перезагрузка страницы всегда рвёт соединение, дальше клиент открывает новое — вопрос лишь в том, восстановит ли он состояние. Из остального самые частые находки: <b>молчаливая потеря</b> отправленного в момент обрыва, <b>реконнект без задержки</b> (клиент долбит сервер сотнями попыток в секунду — и добивает его после аварии) и <b>соединение, живущее после выхода</b> из аккаунта.`}
+]});
+
+T({id:'p6', mod:'proto', title:'Что выбрать под задачу', tag:'теория',
+brief:`<p>Все четыре способа делают одно: переносят данные между клиентом и сервером. Выбор диктуется тем, кто клиент, кто инициирует обмен и насколько жёсткий нужен контракт.</p>`,
+questions:[
+ {k:'match', q:'Задача → чем решать',
+  pairs:[
+   ['Публичное API для сторонних разработчиков, нужен кэш и простота','REST по HTTP'],
+   ['Мобильное приложение тянет разные наборы полей и хочет меньше походов','GraphQL'],
+   ['Обмен между внутренними сервисами: низкая задержка, строгий контракт, стриминг','gRPC'],
+   ['Чат и живые уведомления, где сервер сам инициирует обмен','WebSocket'],
+   ['Односторонний поток обновлений от сервера в браузер, без ответов клиента','Server-Sent Events'],
+   ['Долгая операция: запустить и опрашивать готовность','REST с задачей и статусом']
+  ],
+  expl:`Про последние два. <b>SSE</b> часто забывают, а он проще WebSocket: обычный HTTP, автоматическое переподключение из коробки, но только сервер → клиент. А «долгая операция» — типовая ошибка проектирования: её пытаются сделать одним синхронным запросом, он отваливается по таймауту шлюза; правильно — <code>202 Accepted</code>, идентификатор задачи и отдельный эндпоинт статуса. Кейс: проверить, что клиент не ждёт ответа дольше таймаута прокси.`},
+ {k:'single', q:'Команда переходит с REST на GraphQL. Что поменяется в твоей работе первым делом?',
+  opts:[
+   'Ничего, тестируется так же',
+   'Проверять придётся тело ответа, а не код: ошибки приходят с <code>200</code>; появятся кейсы на частичные ответы, на глубину и сложность запроса, на доступ к полям',
+   'Тестировать станет не нужно — схема гарантирует корректность',
+   'Понадобится только новый инструмент для запросов'
+  ],
+  right:1,
+  expl:`Схема гарантирует <b>форму</b> ответа, но не права, не бизнес-правила и не то, что резолвер вернёт верные данные. Появляется и новый класс проверок, которого в REST не было: <b>злоупотребление запросом</b> — глубоко вложенный или слишком «широкий» запрос, который положит сервер, если не настроены ограничения глубины и сложности.`}
+]});
+
 /* ============================== СОСТОЯНИЕ ============================== */
 const LSKEY = 'bagodrom.progress.v1';
 let ST = {res:{}};
@@ -1564,7 +1828,7 @@ function viewHome(){
     <div>
       <div class="eyebrow">тренажёр для начинающих тестировщиков</div>
       <h1>Учиться ломать <em>на живых стендах</em>, а не по конспекту</h1>
-      <p class="hero__lede">Восемь модулей: кривая форма регистрации, симулятор DevTools с настоящим Network, конструктор запросов к API, подмена cookie и правка JWT. В каждой задаче — стенд, вопросы и подробный разбор ответа.</p>
+      <p class="hero__lede">Десять модулей: кривая форма регистрации, симулятор DevTools с настоящим Network, конструктор запросов к API, подмена cookie и правка JWT, вход через Basic и Bearer с refresh, живой GraphQL, вызовы gRPC и поток WebSocket. В каждой задаче — стенд, вопросы и подробный разбор ответа.</p>
       <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap">
         ${next? `<button class="btn" id="contBtn">${doneCount? 'Продолжить':'Начать'} → ${next.title}</button>`
                : `<button class="btn" id="contBtn" disabled>Все задачи пройдены</button>`}
@@ -1632,6 +1896,7 @@ function viewModule(m){
 
 /* ============================== ЗАДАЧА ============================== */
 let RT = null;
+let LAB_CLEANUP = [];
 
 function viewTask(t){
   const m = MODULES.find(x=>x.id===t.mod);
@@ -1639,6 +1904,7 @@ function viewTask(t){
   const idx = list.indexOf(t);
   const prev = list[idx-1], next = list[idx+1];
   const saved = resOf(t.id);
+  LAB_CLEANUP.forEach(f=>{ try{ f(); }catch(e){} }); LAB_CLEANUP = [];
   RT = {task:t, ans:{}, checked:false, solved: !!(saved && saved.solved), lab:null};
 
   app.innerHTML = `
@@ -1826,6 +2092,10 @@ function mountLab(host, cfg, t){
   if(cfg.type==='net')  return labNet(host, cfg);
   if(cfg.type==='api')  return labApi(host, cfg);
   if(cfg.type==='bank') return labBank(host, cfg);
+  if(cfg.type==='auth') return labAuth(host, cfg);
+  if(cfg.type==='gql')  return labGql(host, cfg);
+  if(cfg.type==='grpc') return labGrpc(host, cfg);
+  if(cfg.type==='ws')   return labWs(host, cfg);
 }
 const frame = (url, inner, dt) => `
   <div class="sim">
@@ -2225,6 +2495,418 @@ function labBank(host, cfg){
     document.getElementById('jwReset').onclick = ()=>{ token = mkTok(initPayload); applied = token; draw(); };
   };
   draw();
+}
+
+/* ---------- стенд: способы авторизации ---------- */
+function labAuth(host, cfg){
+  const NAMES = {none:'без авторизации', basic:'Basic', session:'Cookie-сессия', token:'Bearer-токен', apikey:'API-key'};
+  const goalKind = cfg.clock? 'refresh' : cfg.methods.includes('basic')? 'basic' : cfg.methods.includes('session')? 'session' : 'token';
+  const KEY = 'k_live_9f31c0a7';
+  let mode = cfg.methods.includes('none')? 'none' : cfg.methods[0];
+  let sess = null, access = null, refresh = null, minutes = 0, sawExpired = false, usedRefresh = false;
+  const rnd = n => Array.from({length:n},()=>'0123456789abcdef'[Math.floor(Math.random()*16)]).join('');
+
+  host.innerHTML = `
+    <div class="rb">
+      <div class="rb__line">
+        <span class="eyebrow">способ</span>
+        <select id="auMode">${cfg.methods.map(m=>`<option value="${m}">${NAMES[m]}</option>`).join('')}</select>
+        <input type="text" id="auLogin" value="anna" style="max-width:110px">
+        <input type="text" id="auPass" value="hunter2" style="max-width:120px">
+      </div>
+      <div class="rb__line" style="gap:6px">
+        <button class="btn btn--sm" data-rq="login">POST /login</button>
+        <button class="btn btn--ghost btn--sm" data-rq="me">GET /api/v1/me</button>
+        <button class="btn btn--ghost btn--sm" data-rq="refresh">POST /api/v1/refresh</button>
+        ${cfg.clock? '<button class="btn btn--quiet btn--sm" id="auClock">прошло 15 минут</button>':''}
+      </div>
+      <div>
+        <div class="eyebrow" style="margin-bottom:5px">что уходит на сервер</div>
+        <div class="wire" id="auWire"></div>
+      </div>
+      <div class="rb__log" id="auLog"></div>
+    </div>`;
+  const $ = id => document.getElementById(id);
+  const creds = () => ({l:$('auLogin').value, p:$('auPass').value});
+
+  function headers(path, method){
+    const h = {};
+    if(method==='POST') h['content-type'] = 'application/json';
+    if(mode==='basic'){ const c=creds(); h['authorization'] = 'Basic '+btoa(c.l+':'+c.p); }
+    if(mode==='session' && sess) h['cookie'] = 'session='+sess;
+    if(mode==='token' && access && path!=='/api/v1/refresh') h['authorization'] = 'Bearer '+access.tok;
+    if(mode==='token' && refresh && path==='/api/v1/refresh') h['authorization'] = 'Bearer '+refresh.tok;
+    if(mode==='apikey') h['x-api-key'] = KEY;
+    return h;
+  }
+  function drawWire(path, method){
+    const h = headers(path, method);
+    let out = `<b>${method} ${path}</b>\n` + (Object.keys(h).length? Object.entries(h).map(([k,v])=>`${k}: ${v}`).join('\n') : '(никаких заголовков авторизации)');
+    if(h['authorization'] && h['authorization'].startsWith('Basic ')){
+      const dec = atob(h['authorization'].slice(6));
+      out += `\n<span class="dec">↑ base64 — это не шифрование: ${dec}</span>`;
+    }
+    if(mode==='session' && !sess) out += `\n<span class="dec">↑ cookie пока нет — сначала POST /login</span>`;
+    if(mode==='token' && !access) out += `\n<span class="dec">↑ токена пока нет — сначала POST /login</span>`;
+    $('auWire').innerHTML = out;
+  }
+  function server(kind){
+    const c = creds(), ok = c.l==='anna' && c.p==='hunter2';
+    if(kind==='login'){
+      if(mode==='session'){
+        if(!ok) return {st:401, txt:'Unauthorized', body:{error:'invalid_credentials'}};
+        sess = 's_'+rnd(8);
+        return {st:200, txt:'OK', hdr:{'set-cookie':`session=${sess}; HttpOnly; Secure; SameSite=Lax; Max-Age=1800`},
+                body:{ok:true, user:'anna'}};
+      }
+      if(mode==='token'){
+        if(!ok) return {st:401, txt:'Unauthorized', body:{error:'invalid_credentials'}};
+        access = {tok:'at_'+rnd(10), exp:minutes+15};
+        refresh = {tok:'rt_'+rnd(14), exp:minutes+43200};
+        return {st:200, txt:'OK', body:{token_type:'Bearer', access_token:access.tok, expires_in:900, refresh_token:refresh.tok}};
+      }
+      return {st:400, txt:'Bad Request', body:{error:'not_applicable',
+        message: mode==='basic'? 'при Basic отдельного входа нет: логин и пароль идут с каждым запросом'
+               : mode==='apikey'? 'API-key выдаётся заранее, вход не требуется'
+               : 'способ авторизации не выбран'}};
+    }
+    if(kind==='refresh'){
+      if(mode!=='token') return {st:400, txt:'Bad Request', body:{error:'not_applicable', message:'refresh есть только у Bearer-схемы'}};
+      if(!refresh || refresh.exp<=minutes) return {st:401, txt:'Unauthorized', body:{error:'invalid_refresh'}};
+      access = {tok:'at_'+rnd(10), exp:minutes+15}; usedRefresh = true;
+      return {st:200, txt:'OK', body:{token_type:'Bearer', access_token:access.tok, expires_in:900}};
+    }
+    if(mode==='none') return {st:401, txt:'Unauthorized', hdr:{'www-authenticate':'Basic realm="api"'}, body:{error:'unauthorized'}};
+    if(mode==='basic') return ok? {st:200, txt:'OK', body:{user:'anna', auth:'basic'}}
+                               : {st:401, txt:'Unauthorized', hdr:{'www-authenticate':'Basic realm="api"'}, body:{error:'invalid_credentials'}};
+    if(mode==='session') return sess? {st:200, txt:'OK', body:{user:'anna', auth:'session', session:sess}}
+                                    : {st:401, txt:'Unauthorized', body:{error:'no_session', message:'нет cookie session'}};
+    if(mode==='apikey') return {st:200, txt:'OK', body:{client:'batch-importer', user:null,
+                                 note:'ключ выдан системе, а не человеку — в аудите пользователя не будет'}};
+    if(!access) return {st:401, txt:'Unauthorized', body:{error:'no_token'}};
+    if(access.exp<=minutes){ sawExpired = true;
+      return {st:401, txt:'Unauthorized', body:{error:'token_expired', message:'access-токен истёк, обменяйте refresh'}}; }
+    return {st:200, txt:'OK', body:{user:'anna', auth:'bearer', expires_in_min:access.exp-minutes}};
+  }
+  function send(kind){
+    const path = kind==='login'? '/login' : kind==='refresh'? '/api/v1/refresh' : '/api/v1/me';
+    const method = kind==='me'? 'GET' : 'POST';
+    drawWire(path, method);
+    const r = server(kind);
+    const cls = r.st>=500?'st--5':r.st>=400?'st--4':'st--2';
+    const hdr = Object.assign({'content-type':'application/json'}, r.hdr||{});
+    const el = document.createElement('div'); el.className='res';
+    el.innerHTML = `<div class="res__h"><span class="m">${method}</span><span class="p">${path}</span>
+        <span class="st ${cls}">${r.st} ${r.txt}</span>
+        <span class="chip">${NAMES[mode]}</span></div>
+      <div class="res__b">${Object.entries(hdr).map(([k,v])=>k+': '+v).join('\n')}\n\n${JSON.stringify(r.body,null,2)}</div>`;
+    const log = $('auLog'); log.insertBefore(el, log.firstChild);
+    if(r.st===200 && kind==='me'){
+      if(goalKind==='basic'   && mode==='basic')   solveGoal('Basic принят — цель выполнена');
+      if(goalKind==='session' && mode==='session') solveGoal('Вход по сессии работает — цель выполнена');
+      if(goalKind==='refresh' && sawExpired && usedRefresh) solveGoal('Доступ восстановлен через refresh — цель выполнена');
+    }
+  }
+  $('auMode').onchange = ()=>{ mode = $('auMode').value; drawWire('/api/v1/me','GET'); };
+  host.querySelectorAll('[data-rq]').forEach(b=> b.onclick = ()=> send(b.dataset.rq));
+  if(cfg.clock) $('auClock').onclick = ()=>{ minutes += 15; toast('Прошло 15 минут — access-токен истёк'); drawWire('/api/v1/me','GET'); };
+  drawWire('/api/v1/me','GET');
+}
+
+/* ---------- стенд: GraphQL ---------- */
+const GQL_SCHEMA_TEXT = `type Query {
+  user(id: Int!): User
+  orders(status: String): [Order!]
+}
+
+type User {
+  id: Int!
+  name: String!
+  email: String!
+  phoneMasked: String
+  orders: [Order!]      # требует авторизации
+}
+
+type Order {
+  id: Int!
+  total: Int!
+  status: String!
+}`;
+const GQL_TYPES = {
+  Query:{ user:{obj:'User', args:{id:true}}, orders:{obj:'Order', list:true, args:{}} },
+  User:{ id:{}, name:{}, email:{}, phoneMasked:{}, orders:{obj:'Order', list:true, auth:true} },
+  Order:{ id:{}, total:{}, status:{} }
+};
+const GQL_DATA = {
+  user:{id:7, name:'Анна Соколова', email:'anna@mail.ru', phoneMasked:'+7 900 ***-**-01',
+        orders:[{id:812,total:3980,status:'active'},{id:813,total:12000,status:'paid'}]},
+  orders:[{id:812,total:3980,status:'active'},{id:813,total:12000,status:'paid'}]
+};
+function gqlParse(src){
+  let i = 0; const s = src;
+  const ws = ()=>{ while(i<s.length && /[\s,]/.test(s[i])) i++; };
+  const nm = ()=>{ ws(); const m = /^[A-Za-z_][A-Za-z0-9_]*/.exec(s.slice(i));
+    if(!m) throw new Error('Syntax Error: ожидалось имя поля'); i += m[0].length; return m[0]; };
+  function args(){ ws(); if(s[i]!=='(') return null; i++; const o = {};
+    for(;;){ ws(); if(s[i]===')'){ i++; break; } if(i>=s.length) throw new Error('Syntax Error: не закрыта скобка аргументов');
+      const k = nm(); ws(); if(s[i]!==':') throw new Error('Syntax Error: ожидалось ":" в аргументах'); i++; ws();
+      if(s[i]==='"'){ const j = s.indexOf('"', i+1); o[k] = s.slice(i+1, j); i = j+1; }
+      else { const m = /^[^\s,)}]+/.exec(s.slice(i)); if(!m) throw new Error('Syntax Error: пустое значение аргумента');
+             o[k] = isNaN(+m[0])? m[0] : +m[0]; i += m[0].length; } }
+    return o; }
+  function sel(){ ws(); if(s[i]!=='{') return null; i++; const out = [];
+    for(;;){ ws(); if(s[i]==='}'){ i++; break; } if(i>=s.length) throw new Error('Syntax Error: не закрыта фигурная скобка');
+      const name = nm(); out.push({name, args:args(), sel:sel()}); }
+    return out; }
+  ws();
+  if(/^mutation\b/.test(s.slice(i))) throw new Error('На этом стенде поддерживаются только query');
+  if(/^query\b/.test(s.slice(i))){ i += 5; ws(); if(/^[A-Za-z_]/.test(s[i]||'')) nm(); }
+  const root = sel();
+  if(!root) throw new Error('Syntax Error: ожидался блок { … }');
+  if(!root.length) throw new Error('Syntax Error: пустая выборка полей');
+  return root;
+}
+function gqlRun(query, authed){
+  let root;
+  try{ root = gqlParse(query); }
+  catch(e){ return {http:400, txt:'Bad Request', body:{errors:[{message:e.message}]}}; }
+  const errors = [];
+  (function validate(nodes, type, path){
+    nodes.forEach(n=>{
+      const def = GQL_TYPES[type][n.name];
+      if(!def){
+        const near = Object.keys(GQL_TYPES[type]).find(k=>k.toLowerCase().startsWith(n.name.toLowerCase().slice(0,4)));
+        errors.push({message:`Cannot query field "${n.name}" on type "${type}".`+(near?` Did you mean "${near}"?`:''),
+                     path:path.concat(n.name)});
+        return;
+      }
+      if(def.args && def.args.id && !(n.args && n.args.id!==undefined))
+        errors.push({message:`Field "${n.name}" argument "id" of type "Int!" is required, but it was not provided.`, path:path.concat(n.name)});
+      if(def.obj && !n.sel) errors.push({message:`Field "${n.name}" of type "${def.obj}" must have a selection of subfields.`, path:path.concat(n.name)});
+      if(!def.obj && n.sel) errors.push({message:`Field "${n.name}" must not have a selection since type is a scalar.`, path:path.concat(n.name)});
+      if(def.obj && n.sel) validate(n.sel, def.obj, path.concat(n.name));
+    });
+  })(root, 'Query', []);
+  if(errors.length) return {http:200, txt:'OK', body:{errors}, validation:true};
+  const runtime = [];
+  const resolve = (nodes, type, src, path)=>{
+    const out = {};
+    nodes.forEach(n=>{
+      const def = GQL_TYPES[type][n.name], p = path.concat(n.name);
+      if(def.auth && !authed){
+        out[n.name] = null;
+        runtime.push({message:'Not authorized to view orders', path:p, extensions:{code:'FORBIDDEN'}});
+        return;
+      }
+      const val = src[n.name];
+      if(!def.obj){ out[n.name] = val===undefined? null : val; return; }
+      if(def.list) out[n.name] = (val||[]).map(v=>resolve(n.sel, def.obj, v, p));
+      else out[n.name] = val? resolve(n.sel, def.obj, val, p) : null;
+    });
+    return out;
+  };
+  const data = resolve(root, 'Query', GQL_DATA, []);
+  return {http:200, txt:'OK', body: runtime.length? {data, errors:runtime} : {data}, root};
+}
+function labGql(host, cfg){
+  const authed0 = cfg.auth !== false;
+  host.innerHTML = `
+    <div class="rb">
+      <div class="statusline">
+        <span class="chip">POST</span><span class="mono" style="font-size:12.5px">https://shop.test/graphql</span>
+        <button class="btn btn--quiet btn--sm" id="gqSch">схема</button>
+        <label class="mono" style="font-size:12px; display:flex; align-items:center; gap:6px; cursor:pointer">
+          <input type="checkbox" id="gqAuth" ${authed0?'checked':''} style="width:15px;height:15px"> отправлять Authorization
+        </label>
+      </div>
+      <div class="codeblock schema" id="gqSchBox">${GQL_SCHEMA_TEXT}</div>
+      <textarea id="gqQ" rows="9" spellcheck="false">${cfg.query}</textarea>
+      <div class="rb__line"><button class="btn btn--sm" id="gqSend">Отправить</button>
+        <span class="mono" style="font-size:11.5px; color:var(--muted)">ошибки GraphQL приходят с HTTP 200 — смотри тело</span></div>
+      <div class="rb__log" id="gqLog"></div>
+    </div>`;
+  const $ = id => document.getElementById(id);
+  $('gqSch').onclick = ()=>{ const b=$('gqSchBox'); b.style.display = b.style.display==='block'? 'none':'block'; };
+  $('gqSend').onclick = ()=>{
+    const q = $('gqQ').value, authed = $('gqAuth').checked;
+    const r = gqlRun(q, authed);
+    const cls = r.http>=400? 'st--4':'st--2';
+    const errs = (r.body.errors||[]).length;
+    const el = document.createElement('div'); el.className='res';
+    el.innerHTML = `<div class="res__h"><span class="m">POST</span><span class="p">/graphql</span>
+        <span class="st ${cls}">${r.http} ${r.txt}</span>
+        ${errs? `<span class="chip chip--no">errors: ${errs}</span>`:'<span class="chip chip--ok">без ошибок</span>'}
+        ${r.body.data===undefined && errs? '<span class="chip chip--warn">data нет вовсе</span>':''}
+        ${r.body.data && errs? '<span class="chip chip--warn">частичный ответ</span>':''}</div>
+      <div class="res__b">${JSON.stringify(r.body,null,2)}</div>`;
+    const log = $('gqLog'); log.insertBefore(el, log.firstChild);
+    if(cfg.auth === false){
+      if(r.http===200 && errs) solveGoal('HTTP 200 с массивом errors — цель выполнена');
+    } else if(r.root){
+      const u = r.root.length===1 && r.root[0].name==='user' && r.root[0].sel;
+      if(u && u.length===2 && u.map(x=>x.name).sort().join(',')==='email,name')
+        solveGoal('Запрошены ровно name и email — цель выполнена');
+    }
+  };
+}
+
+/* ---------- стенд: gRPC ---------- */
+const PROTO_TEXT = `syntax = "proto3";
+
+service AccountService {
+  rpc GetBalance (GetBalanceRequest) returns (Balance);
+  rpc ListOperations (ListOperationsRequest) returns (stream Operation);
+}
+
+message GetBalanceRequest { string account_id = 1; }
+message Balance {
+  string account_id   = 1;
+  int64  amount_minor = 2;   // копейки, не рубли
+  string currency     = 3;
+}
+message Operation { string date = 1; string title = 2; int64 amount_minor = 3; }`;
+const GRPC_CODES = {0:'OK',3:'INVALID_ARGUMENT',5:'NOT_FOUND',7:'PERMISSION_DENIED',12:'UNIMPLEMENTED',14:'UNAVAILABLE',16:'UNAUTHENTICATED'};
+function labGrpc(host, cfg){
+  const seen = new Set();
+  let down = false;
+  host.innerHTML = `
+    <div class="rb">
+      <div class="statusline">
+        <span class="mono" style="font-size:12.5px">grpc://accounts.internal:9090</span>
+        <button class="btn btn--quiet btn--sm" id="grSch">.proto</button>
+      </div>
+      <div class="codeblock schema" id="grSchBox">${PROTO_TEXT}</div>
+      <div class="rb__line">
+        <select id="grM" style="min-width:230px">
+          <option>AccountService/GetBalance</option>
+          <option>AccountService/ListOperations</option>
+          <option>AccountService/CloseAccount</option>
+        </select>
+        <label class="mono" style="font-size:12px; display:flex; align-items:center; gap:6px; cursor:pointer">
+          <input type="checkbox" id="grAuth" checked style="width:15px;height:15px"> metadata: authorization
+        </label>
+      </div>
+      <div>
+        <div class="eyebrow" style="margin-bottom:5px">сообщение · JSON (на проводе — бинарный protobuf)</div>
+        <textarea id="grB" rows="4" spellcheck="false">{
+  "account_id": "40817810000000004417"
+}</textarea>
+      </div>
+      <div class="rb__line"><button class="btn btn--sm" id="grCall">Вызвать</button>
+        <button class="btn btn--quiet btn--sm" id="grDown">сервис недоступен: выкл</button></div>
+      <div class="rb__log" id="grLog"></div>
+    </div>`;
+  const $ = id => document.getElementById(id);
+  $('grSch').onclick = ()=>{ const b=$('grSchBox'); b.style.display = b.style.display==='block'? 'none':'block'; };
+  $('grDown').onclick = ()=>{ down = !down; $('grDown').textContent = 'сервис недоступен: '+(down?'вкл':'выкл'); };
+  function call(){
+    const m = $('grM').value, authed = $('grAuth').checked;
+    if(down) return {c:14, msg:'connection refused: accounts.internal:9090'};
+    if(!authed) return {c:16, msg:'missing authorization metadata'};
+    if(m.endsWith('CloseAccount')) return {c:12, msg:'method AccountService/CloseAccount is not implemented'};
+    let d;
+    try{ d = JSON.parse($('grB').value||'{}'); }
+    catch(e){ return {c:3, msg:'cannot parse request message: '+e.message}; }
+    if(m.endsWith('ListOperations')) return {c:0, stream:[
+      {date:'24.08', title:'Кофейня «Тчк»', amount_minor:-32000},
+      {date:'23.08', title:'Перевод от И. Сомов', amount_minor:1200000},
+      {date:'22.08', title:'Аренда', amount_minor:-4500000}]};
+    if(typeof d.account_id !== 'string' || d.account_id.trim()==='')
+      return {c:3, msg:'account_id must not be empty'};
+    if(d.account_id === '40817810000000009032') return {c:7, msg:'account belongs to another tenant'};
+    if(d.account_id !== '40817810000000004417') return {c:5, msg:'account not found'};
+    return {c:0, body:{account_id:d.account_id, amount_minor:12840000, currency:'RUB'}};
+  }
+  $('grCall').onclick = ()=>{
+    const m = $('grM').value, r = call();
+    seen.add(r.c);
+    const cls = r.c===0? 'st--2' : r.c===14? 'st--5':'st--4';
+    const el = document.createElement('div'); el.className='res';
+    const payload = r.stream? r.stream.map((x,i)=>`← сообщение ${i+1}\n`+JSON.stringify(x,null,2)).join('\n\n')
+                  : r.body? JSON.stringify(r.body,null,2) : '(пустое сообщение)';
+    el.innerHTML = `<div class="res__h"><span class="m">rpc</span><span class="p">${m}</span>
+        <span class="st ${cls}">${r.c} ${GRPC_CODES[r.c]}</span>
+        ${r.stream? '<span class="chip">stream · 3 сообщения</span>':''}</div>
+      <div class="res__b">${r.msg? 'grpc-message: '+r.msg+'\n\n' : ''}${payload}</div>`;
+    const log = $('grLog'); log.insertBefore(el, log.firstChild);
+    if(seen.has(3) && seen.has(16)) solveGoal('Получены и INVALID_ARGUMENT, и UNAUTHENTICATED — цель выполнена');
+  };
+}
+
+/* ---------- стенд: WebSocket ---------- */
+function labWs(host, cfg){
+  let open = false, timer = null, n = 0, sentOnce = false;
+  const feed = [
+    '{"type":"price","pair":"USD/RUB","value":91.42}',
+    '{"type":"notice","text":"Заказ 812 передан курьеру"}',
+    '{"type":"price","pair":"USD/RUB","value":91.38}',
+    '{"type":"notice","text":"Списание 320,00 ₽ — Кофейня «Тчк»"}'
+  ];
+  host.innerHTML = `
+    <div class="rb">
+      <div class="statusline">
+        <span class="mono" style="font-size:12.5px">wss://shop.test/ws</span>
+        <span class="chip" id="wsSt">closed</span>
+      </div>
+      <div class="rb__line" style="gap:6px">
+        <button class="btn btn--sm" id="wsOpen">Подключиться</button>
+        <button class="btn btn--ghost btn--sm" id="wsPing">ping</button>
+        <button class="btn btn--quiet btn--sm" id="wsDrop">Обрыв сети</button>
+        <button class="btn btn--quiet btn--sm" id="wsClose">Закрыть (1000)</button>
+      </div>
+      <div class="rb__line">
+        <input type="text" id="wsIn" placeholder='{"type":"subscribe","pair":"USD/RUB"}' spellcheck="false">
+        <button class="btn btn--sm" id="wsSend">Отправить</button>
+      </div>
+      <div class="msgs" id="wsLog"></div>
+    </div>`;
+  const $ = id => document.getElementById(id);
+  const now = () => new Date().toLocaleTimeString('ru-RU');
+  function push(kind, text){
+    const el = document.createElement('div');
+    el.className = 'msg msg--'+kind;
+    el.innerHTML = `<span class="msg__t">${now()}</span>${text}`;
+    const log = $('wsLog'); log.appendChild(el); log.scrollTop = log.scrollHeight;
+  }
+  function setSt(v, cls){ const c=$('wsSt'); c.textContent=v; c.className='chip '+(cls||''); }
+  function stop(){ if(timer){ clearInterval(timer); timer=null; } }
+  LAB_CLEANUP.push(stop);
+  $('wsOpen').onclick = ()=>{
+    if(open) return toast('Соединение уже открыто');
+    push('sys','GET /ws · Upgrade: websocket · Sec-WebSocket-Key: dGhlIHNhbXBsZQ==');
+    push('sys','← HTTP/1.1 101 Switching Protocols · соединение установлено');
+    open = true; setSt('open','chip--ok');
+    stop();
+    timer = setInterval(()=>{ if(open) push('in','← '+feed[(n++)%feed.length]); }, 4200);
+  };
+  $('wsSend').onclick = ()=>{
+    const v = $('wsIn').value.trim() || '{"type":"subscribe","pair":"USD/RUB"}';
+    if(!open){
+      push('err','✗ не отправлено: соединение закрыто (readyState 3) — сообщение потеряно, приложение об этом не сообщило');
+      if(cfg.drop) solveGoal('Сообщение потеряно при закрытом соединении — цель выполнена');
+      return;
+    }
+    push('out','→ '+v);
+    sentOnce = true;
+    setTimeout(()=>{ if(!open) return;
+      push('in','← {"type":"ack","of":"subscribe","status":"ok"}');
+      if(!cfg.drop) solveGoal('Сервер ответил на твоё сообщение — цель выполнена');
+    }, 500);
+  };
+  $('wsPing').onclick = ()=>{
+    if(!open) return push('err','✗ ping невозможен: соединение закрыто');
+    push('out','→ ping'); setTimeout(()=>{ if(open) push('in','← pong'); }, 320);
+  };
+  $('wsDrop').onclick = ()=>{
+    if(!open) return toast('Соединение и так закрыто');
+    open = false; stop(); setSt('closed · 1006','chip--no');
+    push('sys','✗ соединение разорвано: код 1006 (без close-фрейма). Клиент не переподключается сам');
+  };
+  $('wsClose').onclick = ()=>{
+    if(!open) return toast('Соединение и так закрыто');
+    open = false; stop(); setSt('closed · 1000');
+    push('sys','← close 1000 (normal closure)');
+  };
 }
 
 /* ============================== СТАРТ ============================== */
